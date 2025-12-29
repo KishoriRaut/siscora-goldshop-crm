@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Pagination } from "@/components/ui/pagination"
 
 export function GoldRates() {
   const [rateType, setRateType] = useState<"gold" | "silver">("gold")
@@ -39,6 +40,9 @@ export function GoldRates() {
   const [editingSilverRate, setEditingSilverRate] = useState<SilverRate | null>(null)
   const [deleteGoldRate, setDeleteGoldRate] = useState<GoldRate | null>(null)
   const [deleteSilverRate, setDeleteSilverRate] = useState<SilverRate | null>(null)
+  const [goldCurrentPage, setGoldCurrentPage] = useState(1)
+  const [silverCurrentPage, setSilverCurrentPage] = useState(1)
+  const itemsPerPage = 10
   const [goldFormData, setGoldFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     purity22K: "",
@@ -254,13 +258,13 @@ export function GoldRates() {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Gold & Silver Rates</h2>
-          <p className="text-muted-foreground">Manage daily gold and silver rates</p>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Gold & Silver Rates</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage daily gold and silver rates</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button 
             onClick={() => {
               setRateType("gold")
@@ -291,13 +295,15 @@ export function GoldRates() {
 
 
       {/* Current Rates Display */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {currentGoldRate && (
-          <Card className="p-6 bg-primary/5 border-primary/20">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold text-foreground">Current Gold Rates</h3>
-              <span className="text-sm text-muted-foreground ml-auto">
+          <Card className="p-4 sm:p-6 bg-primary/5 border-primary/20">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 mb-3 sm:mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <h3 className="text-base sm:text-lg font-semibold text-foreground">Current Gold Rates</h3>
+              </div>
+              <span className="text-xs sm:text-sm text-muted-foreground sm:ml-auto">
                 {new Date(currentGoldRate.date).toLocaleDateString("en-NP", {
                   year: "numeric",
                   month: "long",
@@ -305,20 +311,20 @@ export function GoldRates() {
                 })}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">24K Gold</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity24K)}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">24K Gold</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground break-words">{formatCurrency(currentGoldRate.purity24K)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">22K Gold</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity22K)}</p>
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">22K Gold</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground break-words">{formatCurrency(currentGoldRate.purity22K)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">18K Gold</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity18K)}</p>
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">18K Gold</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground break-words">{formatCurrency(currentGoldRate.purity18K)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
             </div>
@@ -326,11 +332,13 @@ export function GoldRates() {
         )}
 
         {currentSilverRate && (
-          <Card className="p-6 bg-primary/5 border-primary/20">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold text-foreground">Current Silver Rates</h3>
-              <span className="text-sm text-muted-foreground ml-auto">
+          <Card className="p-4 sm:p-6 bg-primary/5 border-primary/20">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 mb-3 sm:mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <h3 className="text-base sm:text-lg font-semibold text-foreground">Current Silver Rates</h3>
+              </div>
+              <span className="text-xs sm:text-sm text-muted-foreground sm:ml-auto">
                 {new Date(currentSilverRate.date).toLocaleDateString("en-NP", {
                   year: "numeric",
                   month: "long",
@@ -338,15 +346,15 @@ export function GoldRates() {
                 })}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">999 Silver (Pure)</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(currentSilverRate.purity999)}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">999 Silver (Pure)</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground break-words">{formatCurrency(currentSilverRate.purity999)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">925 Silver (Sterling)</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(currentSilverRate.purity925)}</p>
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">925 Silver (Sterling)</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground break-words">{formatCurrency(currentSilverRate.purity925)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
             </div>
@@ -356,8 +364,8 @@ export function GoldRates() {
 
       {/* Form */}
       {showForm && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
+        <Card className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
             {rateType === "gold" 
               ? (editingGoldRate ? "Edit Gold Rate" : "Add Gold Rate")
               : (editingSilverRate ? "Edit Silver Rate" : "Add Silver Rate")
@@ -490,7 +498,7 @@ export function GoldRates() {
 
       {/* Rate History */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-5 h-5 text-muted-foreground" />
             <h3 className="text-lg font-semibold text-foreground">Gold Rate History</h3>
@@ -499,7 +507,16 @@ export function GoldRates() {
             {sortedGoldRates.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No gold rates recorded yet</p>
             ) : (
-              sortedGoldRates.map((rate) => (
+              <>
+                {(() => {
+                  const totalPages = Math.ceil(sortedGoldRates.length / itemsPerPage)
+                  const startIndex = (goldCurrentPage - 1) * itemsPerPage
+                  const endIndex = startIndex + itemsPerPage
+                  const paginatedGoldRates = sortedGoldRates.slice(startIndex, endIndex)
+                  
+                  return (
+                    <>
+                      {paginatedGoldRates.map((rate) => (
                 <div key={rate.id} className="p-4 bg-secondary rounded-lg">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -562,12 +579,25 @@ export function GoldRates() {
                     )}
                   </div>
                 </div>
-              ))
+                      ))}
+                      {sortedGoldRates.length > itemsPerPage && (
+                        <Pagination
+                          currentPage={goldCurrentPage}
+                          totalPages={Math.ceil(sortedGoldRates.length / itemsPerPage)}
+                          onPageChange={setGoldCurrentPage}
+                          itemsPerPage={itemsPerPage}
+                          totalItems={sortedGoldRates.length}
+                        />
+                      )}
+                    </>
+                  )
+                })()}
+              </>
             )}
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-5 h-5 text-muted-foreground" />
             <h3 className="text-lg font-semibold text-foreground">Silver Rate History</h3>
@@ -576,7 +606,16 @@ export function GoldRates() {
             {sortedSilverRates.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No silver rates recorded yet</p>
             ) : (
-              sortedSilverRates.map((rate) => (
+              <>
+                {(() => {
+                  const totalPages = Math.ceil(sortedSilverRates.length / itemsPerPage)
+                  const startIndex = (silverCurrentPage - 1) * itemsPerPage
+                  const endIndex = startIndex + itemsPerPage
+                  const paginatedSilverRates = sortedSilverRates.slice(startIndex, endIndex)
+                  
+                  return (
+                    <>
+                      {paginatedSilverRates.map((rate) => (
                 <div key={rate.id} className="p-4 bg-secondary rounded-lg">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -629,7 +668,20 @@ export function GoldRates() {
                     </div>
                   </div>
                 </div>
-              ))
+                      ))}
+                      {sortedSilverRates.length > itemsPerPage && (
+                        <Pagination
+                          currentPage={silverCurrentPage}
+                          totalPages={Math.ceil(sortedSilverRates.length / itemsPerPage)}
+                          onPageChange={setSilverCurrentPage}
+                          itemsPerPage={itemsPerPage}
+                          totalItems={sortedSilverRates.length}
+                        />
+                      )}
+                    </>
+                  )
+                })()}
+              </>
             )}
           </div>
         </Card>

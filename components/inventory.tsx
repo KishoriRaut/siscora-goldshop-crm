@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Plus, Weight, Filter, X, Edit, Trash2 } from "lucide-react"
 import { getInventory, saveInventory, type InventoryItem } from "@/lib/storage"
 import { getSales } from "@/lib/storage"
+import { Pagination } from "@/components/ui/pagination"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,8 @@ export function Inventory() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
   const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null)
   const [showFilters, setShowFilters] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
   const [filters, setFilters] = useState({
     type: "",
     purity: "",
@@ -44,6 +47,11 @@ export function Inventory() {
   useEffect(() => {
     setInventory(getInventory())
   }, [])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters.type, filters.purity, filters.searchTerm, filters.metalType])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -134,37 +142,37 @@ export function Inventory() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Inventory</h2>
-          <p className="text-muted-foreground">Manage your gold items</p>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Inventory</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage your gold items</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2">
+        <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           Add Item
         </Button>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Total Inventory Value</p>
-            <p className="text-2xl font-semibold text-foreground mt-1">{formatCurrency(totalValue)}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs sm:text-sm text-muted-foreground">Total Inventory Value</p>
+            <p className="text-xl sm:text-2xl font-semibold text-foreground mt-1 break-words">{formatCurrency(totalValue)}</p>
           </div>
-          <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-            <Weight className="w-6 h-6 text-accent-foreground" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+            <Weight className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
           </div>
         </div>
       </Card>
 
       {showForm && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
+        <Card className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
             {editingItem ? "Edit Inventory Item" : "Add Inventory Item"}
           </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Item Name *</label>
                 <Input
@@ -245,9 +253,9 @@ export function Inventory() {
                 />
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button type="submit">{editingItem ? "Update Item" : "Save Item"}</Button>
-              <Button type="button" variant="outline" onClick={handleCancelEdit}>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button type="submit" className="w-full sm:w-auto">{editingItem ? "Update Item" : "Save Item"}</Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full sm:w-auto">
                 Cancel
               </Button>
             </div>
@@ -255,14 +263,14 @@ export function Inventory() {
         </Card>
       )}
 
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Inventory Items</h3>
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Inventory Items</h3>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full sm:w-auto"
           >
             <Filter className="w-4 h-4" />
             Filters
@@ -270,8 +278,8 @@ export function Inventory() {
         </div>
 
         {showFilters && (
-          <div className="mb-4 p-4 bg-secondary rounded-lg space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-secondary rounded-lg space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-foreground mb-1">Type</label>
                 <Input
@@ -330,6 +338,9 @@ export function Inventory() {
                 item.purity.toLowerCase().includes(filters.purity.toLowerCase())
               )
             }
+            if (filters.metalType) {
+              filteredInventory = filteredInventory.filter((item) => item.metalType === filters.metalType)
+            }
             if (filters.searchTerm) {
               const search = filters.searchTerm.toLowerCase()
               filteredInventory = filteredInventory.filter((item) =>
@@ -337,40 +348,57 @@ export function Inventory() {
               )
             }
 
+            // Pagination logic
+            const totalPages = Math.ceil(filteredInventory.length / itemsPerPage)
+            const startIndex = (currentPage - 1) * itemsPerPage
+            const endIndex = startIndex + itemsPerPage
+            const paginatedInventory = filteredInventory.slice(startIndex, endIndex)
+
             return filteredInventory.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No inventory items found</p>
             ) : (
-              filteredInventory.map((item) => (
-              <div key={item.id} className="p-4 bg-secondary rounded-lg">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-foreground">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">{item.type}</p>
+              <>
+                {paginatedInventory.map((item) => (
+                  <div key={item.id} className="p-4 bg-secondary rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-foreground">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">{item.type}</p>
+                      </div>
+                      <p className="font-semibold text-primary">{formatCurrency(item.totalValue)}</p>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Weight</p>
+                        <p className="font-medium text-foreground">{item.weight}g</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Metal / Purity</p>
+                        <p className="font-medium text-foreground">
+                          {item.metalType === "silver" ? "Silver" : "Gold"} - {item.purity}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Price/g</p>
+                        <p className="font-medium text-foreground">{formatCurrency(item.pricePerGram)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Quantity</p>
+                        <p className="font-medium text-foreground">{item.quantity}</p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="font-semibold text-primary">{formatCurrency(item.totalValue)}</p>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Weight</p>
-                    <p className="font-medium text-foreground">{item.weight}g</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Metal / Purity</p>
-                    <p className="font-medium text-foreground">
-                      {item.metalType === "silver" ? "Silver" : "Gold"} - {item.purity}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Price/g</p>
-                    <p className="font-medium text-foreground">{formatCurrency(item.pricePerGram)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Quantity</p>
-                    <p className="font-medium text-foreground">{item.quantity}</p>
-                  </div>
-                </div>
-              </div>
-              ))
+                ))}
+                {filteredInventory.length > itemsPerPage && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filteredInventory.length}
+                  />
+                )}
+              </>
             )
           })()}
         </div>

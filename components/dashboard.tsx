@@ -53,113 +53,113 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-foreground">Dashboard</h2>
-        <p className="text-muted-foreground">Overview of your gold & silver shop</p>
+        <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Dashboard</h2>
+        <p className="text-sm sm:text-base text-muted-foreground">Overview of your gold & silver shop</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Customers</p>
-              <p className="text-3xl font-semibold text-foreground mt-2">{stats.totalCustomers}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Customers</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-foreground mt-1 sm:mt-2">{stats.totalCustomers}</p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Inventory Items</p>
-              <p className="text-3xl font-semibold text-foreground mt-2">{stats.totalItems}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Inventory Items</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-foreground mt-1 sm:mt-2">{stats.totalItems}</p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <Package className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Sales</p>
-              <p className="text-3xl font-semibold text-foreground mt-2">{stats.totalSales}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Sales</p>
+              <p className="text-2xl sm:text-3xl font-semibold text-foreground mt-1 sm:mt-2">{stats.totalSales}</p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <Receipt className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-xl font-semibold text-foreground mt-2">{formatCurrency(stats.totalRevenue)}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Revenue</p>
+              <p className="text-lg sm:text-xl font-semibold text-foreground mt-1 sm:mt-2 break-words">{formatCurrency(stats.totalRevenue)}</p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Making Charges</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Making Charges</p>
+              <p className="text-xl sm:text-2xl font-semibold text-foreground mt-1 sm:mt-2 break-words">
                 {formatCurrency(stats.totalMakingCharges)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">Karigar income</p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <Package className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Gold & Silver Purchases</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">{stats.totalPurchases}</p>
-              <p className="text-xs text-muted-foreground mt-1">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Gold & Silver Purchases</p>
+              <p className="text-xl sm:text-2xl font-semibold text-foreground mt-1 sm:mt-2">{stats.totalPurchases}</p>
+              <p className="text-xs text-muted-foreground mt-1 break-words">
                 {formatCurrency(stats.totalPurchaseAmount)} total
               </p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <ShoppingCart className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Net Profit</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Net Profit</p>
+              <p className="text-xl sm:text-2xl font-semibold text-foreground mt-1 sm:mt-2 break-words">
                 {formatCurrency(stats.totalRevenue - stats.totalPurchaseAmount)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">Sales - Purchases</p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {currentGoldRate && (
-          <Card className="p-6 bg-primary/5 border-primary/20">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Current Gold Rates</h3>
-              <span className="text-sm text-muted-foreground">
+          <Card className="p-4 sm:p-6 bg-primary/5 border-primary/20">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Current Gold Rates</h3>
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 {new Date(currentGoldRate.date).toLocaleDateString("en-NP", {
                   year: "numeric",
                   month: "long",
@@ -167,30 +167,30 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 })}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">24K Gold</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity24K)}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">24K Gold</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground break-words">{formatCurrency(currentGoldRate.purity24K)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">22K Gold</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity22K)}</p>
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">22K Gold</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground break-words">{formatCurrency(currentGoldRate.purity22K)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">18K Gold</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity18K)}</p>
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">18K Gold</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground break-words">{formatCurrency(currentGoldRate.purity18K)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
             </div>
           </Card>
         )}
         {currentSilverRate && (
-          <Card className="p-6 bg-primary/5 border-primary/20">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Current Silver Rates</h3>
-              <span className="text-sm text-muted-foreground">
+          <Card className="p-4 sm:p-6 bg-primary/5 border-primary/20">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Current Silver Rates</h3>
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 {new Date(currentSilverRate.date).toLocaleDateString("en-NP", {
                   year: "numeric",
                   month: "long",
@@ -198,15 +198,15 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 })}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">999 Silver (Pure)</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(currentSilverRate.purity999)}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">999 Silver (Pure)</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground break-words">{formatCurrency(currentSilverRate.purity999)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
-              <div className="p-4 bg-background rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">925 Silver (Sterling)</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(currentSilverRate.purity925)}</p>
+              <div className="p-3 sm:p-4 bg-background rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">925 Silver (Sterling)</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground break-words">{formatCurrency(currentSilverRate.purity925)}</p>
                 <p className="text-xs text-muted-foreground mt-1">per gram</p>
               </div>
             </div>
@@ -214,9 +214,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         )}
       </div>
 
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      <Card className="p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-sm">
           <Button
             variant="outline"
             className="h-auto p-4 flex flex-col items-start justify-start hover:bg-accent cursor-pointer"

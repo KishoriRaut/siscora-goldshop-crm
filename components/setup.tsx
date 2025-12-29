@@ -87,14 +87,14 @@ export function Setup({ onComplete }: SetupProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8 text-primary-foreground" />
+    <div className="min-h-screen bg-background flex items-center justify-center p-3 sm:p-4">
+      <Card className="w-full max-w-md p-4 sm:p-6 md:p-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome to Gold Shop CRM</h1>
-          <p className="text-muted-foreground">Let's set up your shop information</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">Welcome to Gold Shop CRM</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Let's set up your shop information</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -177,4 +177,5 @@ export function Setup({ onComplete }: SetupProps) {
     </div>
   )
 }
+
 

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Plus, FileText, Filter, X, Edit, Trash2 } from "lucide-react"
 import { getSales, saveSales, getCustomers, getInventory, saveInventory, getNextBillNumber, type Sale } from "@/lib/storage"
 import { Invoice } from "@/components/invoice"
+import { Pagination } from "@/components/ui/pagination"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,8 @@ export function Sales() {
   const [deleteSale, setDeleteSale] = useState<Sale | null>(null)
   const [selectedSaleForInvoice, setSelectedSaleForInvoice] = useState<Sale | null>(null)
   const [showFilters, setShowFilters] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
   const [filters, setFilters] = useState({
     customerId: "",
     paymentMethod: "",
@@ -51,6 +54,11 @@ export function Sales() {
     setCustomers(getCustomers())
     setInventory(getInventory())
   }, [])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters.customerId, filters.paymentMethod, filters.dateFrom, filters.dateTo, filters.searchTerm])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -305,25 +313,25 @@ export function Sales() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Sales</h2>
-          <p className="text-muted-foreground">Record and track sales transactions</p>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Sales</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">Record and track sales transactions</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2">
+        <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           New Sale
         </Button>
       </div>
 
       {showForm && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
+        <Card className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
             {editingSale ? "Edit Sale" : "New Sale"}
           </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Customer *</label>
                 <select
@@ -373,7 +381,7 @@ export function Sales() {
                   </p>
                 )}
               </div>
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Making Charges (Karigar) (NPR) *
                 </label>
@@ -403,7 +411,7 @@ export function Sales() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Payment Method *</label>
                 <select
@@ -450,9 +458,9 @@ export function Sales() {
               )}
             </div>
             {formData.itemId && (
-              <div className="p-4 bg-secondary rounded-lg space-y-2">
+              <div className="p-3 sm:p-4 bg-secondary rounded-lg space-y-2">
                 <h4 className="text-sm font-semibold text-foreground">Price Breakdown</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-muted-foreground">
                       {inventory.find((i) => i.id === formData.itemId)?.metalType === "silver" ? "Silver" : "Gold"} Value:
@@ -505,9 +513,9 @@ export function Sales() {
                 </div>
               </div>
             )}
-            <div className="flex gap-2">
-              <Button type="submit">{editingSale ? "Update Sale" : "Record Sale"}</Button>
-              <Button type="button" variant="outline" onClick={handleCancelEdit}>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button type="submit" className="w-full sm:w-auto">{editingSale ? "Update Sale" : "Record Sale"}</Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full sm:w-auto">
                 Cancel
               </Button>
             </div>
@@ -515,14 +523,14 @@ export function Sales() {
         </Card>
       )}
 
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Sales History</h3>
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Sales History</h3>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full sm:w-auto"
           >
             <Filter className="w-4 h-4" />
             Filters
@@ -530,8 +538,8 @@ export function Sales() {
         </div>
 
         {showFilters && (
-          <div className="mb-4 p-4 bg-secondary rounded-lg space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-secondary rounded-lg space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-medium text-foreground mb-1">Customer</label>
                 <select
@@ -636,29 +644,36 @@ export function Sales() {
               )
             }
 
+            // Pagination logic
+            const totalPages = Math.ceil(filteredSales.length / itemsPerPage)
+            const startIndex = (currentPage - 1) * itemsPerPage
+            const endIndex = startIndex + itemsPerPage
+            const paginatedSales = filteredSales.slice(startIndex, endIndex)
+
             return filteredSales.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No sales found</p>
             ) : (
-              filteredSales.map((sale) => (
-              <div key={sale.id} className="p-4 bg-secondary rounded-lg">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-foreground">{sale.customerName}</p>
+              <>
+                {paginatedSales.map((sale) => (
+              <div key={sale.id} className="p-3 sm:p-4 bg-secondary rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-foreground break-words">{sale.customerName}</p>
                       <span className="text-xs text-muted-foreground">
                         Bill #{sale.billNumber || sale.id.slice(-4)}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{sale.itemName}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground break-words">{sale.itemName}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-primary">{formatCurrency(sale.totalAmount)}</p>
+                  <div className="text-left sm:text-right">
+                    <p className="font-semibold text-primary break-words">{formatCurrency(sale.totalAmount)}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(sale.createdAt).toLocaleDateString("en-NP")}
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm pt-3 border-t border-border">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm pt-2 sm:pt-3 border-t border-border">
                   <div>
                     <p className="text-muted-foreground">Quantity</p>
                     <p className="font-medium text-foreground">{sale.quantity}</p>
@@ -670,7 +685,7 @@ export function Sales() {
                         return item?.metalType === "silver" ? "Silver" : "Gold"
                       })()} Value
                     </p>
-                    <p className="font-medium text-foreground">
+                    <p className="font-medium text-foreground break-words">
                       {formatCurrency(
                         sale.goldValue !== undefined
                           ? sale.goldValue
@@ -679,27 +694,27 @@ export function Sales() {
                     </p>
                   </div>
                   <div className="bg-primary/5 p-2 rounded">
-                    <p className="text-muted-foreground text-xs">Making Charges (Karigar)</p>
-                    <p className="font-semibold text-foreground">
+                    <p className="text-muted-foreground text-xs">Making Charges</p>
+                    <p className="font-semibold text-foreground break-words">
                       {formatCurrency(sale.makingCharges || 0)}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Discount</p>
-                    <p className="font-medium text-foreground">{formatCurrency(sale.discount)}</p>
+                    <p className="font-medium text-foreground break-words">{formatCurrency(sale.discount)}</p>
                   </div>
                 </div>
-                <div className="pt-3 border-t border-border mt-3 flex items-center justify-between">
+                <div className="pt-2 sm:pt-3 border-t border-border mt-2 sm:mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Payment:</span>
-                    <span className="text-sm font-medium text-foreground capitalize">
+                    <span className="text-xs sm:text-sm font-medium text-foreground capitalize break-words">
                       {sale.paymentMethod || "cash"}
                       {sale.paymentDetails && (
                         <span className="text-muted-foreground ml-1">({sale.paymentDetails})</span>
                       )}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -720,15 +735,26 @@ export function Sales() {
                       onClick={() => setSelectedSaleForInvoice(sale)}
                       variant="outline"
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                     >
-                      <FileText className="w-4 h-4" />
-                      View / Print Bill
+                      <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">View / Print Bill</span>
+                      <span className="sm:hidden">Bill</span>
                     </Button>
                   </div>
                 </div>
               </div>
-              ))
+                ))}
+                {filteredSales.length > itemsPerPage && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filteredSales.length}
+                  />
+                )}
+              </>
             )
           })()}
         </div>

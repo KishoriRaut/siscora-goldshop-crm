@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, ShoppingCart, TrendingDown, Filter, X, Edit, Trash2 } from "lucide-react"
+import { Pagination } from "@/components/ui/pagination"
 import {
   getPurchases,
   savePurchases,
@@ -44,6 +45,8 @@ export function Purchases() {
   const [addToInventory, setAddToInventory] = useState(true) // Option to add purchased gold to inventory
   const [showAddSeller, setShowAddSeller] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
   const [filters, setFilters] = useState({
     sellerId: "",
     purity: "",
@@ -76,6 +79,11 @@ export function Purchases() {
     setCurrentGoldRate(getCurrentGoldRate())
     setCurrentSilverRate(getCurrentSilverRate())
   }, [])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters.sellerId, filters.purity, filters.dateFrom, filters.dateTo, filters.searchTerm, filters.metalType])
 
   const handleAddSeller = (e: React.FormEvent) => {
     e.preventDefault()
@@ -304,36 +312,36 @@ export function Purchases() {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Gold & Silver Purchases</h2>
-          <p className="text-muted-foreground">Buy gold and silver from sellers</p>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Gold & Silver Purchases</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">Buy gold and silver from sellers</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2">
+        <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           New Purchase
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Purchases</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">{purchases.length}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Purchases</p>
+              <p className="text-xl sm:text-2xl font-semibold text-foreground mt-1 sm:mt-2">{purchases.length}</p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <ShoppingCart className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Purchase Amount</p>
-              <p className="text-xl font-semibold text-foreground mt-2">{formatCurrency(totalPurchaseAmount)}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Purchase Amount</p>
+              <p className="text-lg sm:text-xl font-semibold text-foreground mt-1 sm:mt-2 break-words">{formatCurrency(totalPurchaseAmount)}</p>
             </div>
             <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
               <TrendingDown className="w-6 h-6 text-accent-foreground" />
@@ -341,24 +349,24 @@ export function Purchases() {
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Weight Purchased</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">{totalWeightPurchased.toFixed(2)}g</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Weight Purchased</p>
+              <p className="text-xl sm:text-2xl font-semibold text-foreground mt-1 sm:mt-2">{totalWeightPurchased.toFixed(2)}g</p>
             </div>
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-              <ShoppingCart className="w-6 h-6 text-accent-foreground" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent rounded-lg flex items-center justify-center shrink-0 ml-2">
+              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
             </div>
           </div>
         </Card>
       </div>
 
       {showForm && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">New Gold Purchase</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">New Purchase</h3>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-foreground">
@@ -607,9 +615,9 @@ export function Purchases() {
                 </div>
               </div>
             )}
-            <div className="flex gap-2">
-              <Button type="submit">{editingPurchase ? "Update Purchase" : "Record Purchase"}</Button>
-              <Button type="button" variant="outline" onClick={handleCancelEdit}>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button type="submit" className="w-full sm:w-auto">{editingPurchase ? "Update Purchase" : "Record Purchase"}</Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full sm:w-auto">
                 Cancel
               </Button>
             </div>
@@ -617,14 +625,14 @@ export function Purchases() {
         </Card>
       )}
 
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Purchase History</h3>
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Purchase History</h3>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full sm:w-auto"
           >
             <Filter className="w-4 h-4" />
             Filters
@@ -632,8 +640,8 @@ export function Purchases() {
         </div>
 
         {showFilters && (
-          <div className="mb-4 p-4 bg-secondary rounded-lg space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-secondary rounded-lg space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-medium text-foreground mb-1">Seller</label>
                 <select
@@ -741,10 +749,17 @@ export function Purchases() {
               )
             }
 
+            // Pagination logic
+            const totalPages = Math.ceil(filteredPurchases.length / itemsPerPage)
+            const startIndex = (currentPage - 1) * itemsPerPage
+            const endIndex = startIndex + itemsPerPage
+            const paginatedPurchases = filteredPurchases.slice(startIndex, endIndex)
+
             return filteredPurchases.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No purchases found</p>
             ) : (
-              filteredPurchases.map((purchase) => {
+              <>
+                {paginatedPurchases.map((purchase) => {
                 const estimatedValue = getEstimatedCurrentValue(purchase)
                 const profit = estimatedValue - purchase.totalAmount
                 return (
@@ -832,7 +847,17 @@ export function Purchases() {
                     </div>
                   </div>
                 )
-              })
+              })}
+                {filteredPurchases.length > itemsPerPage && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filteredPurchases.length}
+                  />
+                )}
+              </>
             )
           })()}
         </div>
