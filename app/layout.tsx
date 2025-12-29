@@ -1,15 +1,25 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Gold Shop CRM - सुन पसल व्यवस्थापन',
+  description: 'Complete Gold Shop Management System for Nepali Gold Shops - Manage customers, inventory, sales, purchases, and gold rates',
+  generator: 'Next.js',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Gold Shop CRM',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
     icon: [
       {
@@ -36,8 +46,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="theme-color" content="#000000" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Gold Shop CRM" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+      </head>
       <body className={`font-sans antialiased`}>
         {children}
+        <PWAInstallPrompt />
         <Analytics />
       </body>
     </html>
