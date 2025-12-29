@@ -341,11 +341,13 @@ export function Sales() {
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
                 >
                   <option value="">Select customer</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </option>
-                  ))}
+                  {customers
+                    .filter((customer) => customer.type !== "seller")
+                    .map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div>
@@ -548,11 +550,13 @@ export function Sales() {
                   className="w-full h-9 px-2 text-sm rounded-md border border-input bg-background text-foreground"
                 >
                   <option value="">All Customers</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </option>
-                  ))}
+                  {customers
+                    .filter((customer) => customer.type !== "seller")
+                    .map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div>

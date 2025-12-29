@@ -33,6 +33,7 @@ export function Customers() {
     phone: "",
     email: "",
     address: "",
+    type: "customer" as "customer" | "seller" | "both",
   })
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export function Customers() {
       setCustomers(updatedCustomers)
     }
     
-    setFormData({ name: "", phone: "", email: "", address: "" })
+    setFormData({ name: "", phone: "", email: "", address: "", type: "customer" })
     setShowForm(false)
   }
 
@@ -75,6 +76,7 @@ export function Customers() {
       phone: customer.phone,
       email: customer.email,
       address: customer.address,
+      type: (customer.type || "customer") as "customer" | "seller" | "both",
     })
     setShowForm(true)
   }
@@ -90,7 +92,7 @@ export function Customers() {
 
   const handleCancelEdit = () => {
     setEditingCustomer(null)
-    setFormData({ name: "", phone: "", email: "", address: "" })
+    setFormData({ name: "", phone: "", email: "", address: "", type: "customer" })
     setShowForm(false)
   }
 
@@ -163,6 +165,22 @@ export function Customers() {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Address"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Type *</label>
+                <select
+                  required
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as "customer" | "seller" | "both" })}
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
+                >
+                  <option value="customer">Customer (Buyer)</option>
+                  <option value="seller">Seller (Supplier)</option>
+                  <option value="both">Both (Customer & Seller)</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Customer: appears in Sales | Seller: appears in Purchases | Both: appears in both
+                </p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">

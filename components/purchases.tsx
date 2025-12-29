@@ -453,11 +453,13 @@ export function Purchases() {
                       className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
                     >
                       <option value="">Select seller</option>
-                      {customers.map((seller) => (
-                        <option key={seller.id} value={seller.id}>
-                          {seller.name} {seller.phone && `(${seller.phone})`}
-                        </option>
-                      ))}
+                      {customers
+                        .filter((seller) => seller.type !== "customer")
+                        .map((seller) => (
+                          <option key={seller.id} value={seller.id}>
+                            {seller.name} {seller.phone && `(${seller.phone})`}
+                          </option>
+                        ))}
                     </select>
                     <p className="text-xs text-muted-foreground mt-1">
                       Select the seller you are buying {formData.metalType === "gold" ? "gold" : "silver"} from

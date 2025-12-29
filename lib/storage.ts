@@ -4,6 +4,7 @@ export interface Customer {
   phone: string
   email: string
   address: string
+  type?: "customer" | "seller" | "both" // customer = buyer, seller = supplier, both = can be either
   createdAt: string
 }
 
