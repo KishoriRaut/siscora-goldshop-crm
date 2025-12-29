@@ -6,7 +6,7 @@ import { Customers } from "@/components/customers"
 import { Inventory } from "@/components/inventory"
 import { Sales } from "@/components/sales"
 import { GoldRates } from "@/components/gold-rates"
-import { Sparkles, Users, Package, Receipt, TrendingUp, ShoppingCart, Database, LogOut } from "lucide-react"
+import { Sparkles, Users, Package, Receipt, TrendingUp, ShoppingCart, Database, LogOut, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Purchases } from "@/components/purchases"
 import { ImportExport } from "@/components/import-export"
@@ -16,6 +16,13 @@ import { QRScanner } from "@/components/qr-scanner"
 import { PhysicalInventory } from "@/components/physical-inventory"
 import { isSetupComplete, isAuthenticated, clearAuthSession, getShopInfo } from "@/lib/auth"
 import { QrCode, ClipboardCheck } from "lucide-react"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 
 type Tab = "dashboard" | "customers" | "inventory" | "sales" | "gold-rates" | "purchases" | "import-export" | "qr-scanner" | "physical-inventory"
 type AppState = "setup" | "login" | "app"
@@ -24,6 +31,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard")
   const [appState, setAppState] = useState<AppState>("app")
   const [isChecking, setIsChecking] = useState(true)
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
 
   useEffect(() => {
     // Check authentication status on mount
@@ -282,18 +290,81 @@ export default function Home() {
             <span className="text-[10px] font-medium">Buy</span>
           </button>
           <button
-            onClick={() => setActiveTab("import-export")}
+            onClick={() => setShowMoreMenu(true)}
             className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-lg transition-colors ${
-              activeTab === "import-export"
+              activeTab === "import-export" || activeTab === "qr-scanner" || activeTab === "physical-inventory"
                 ? "text-primary bg-primary/10"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent"
             }`}
           >
-            <Database className={`w-5 h-5 ${activeTab === "import-export" ? "text-primary" : ""}`} />
-            <span className="text-[10px] font-medium">Data</span>
+            <MoreHorizontal className={`w-5 h-5 ${activeTab === "import-export" || activeTab === "qr-scanner" || activeTab === "physical-inventory" ? "text-primary" : ""}`} />
+            <span className="text-[10px] font-medium">More</span>
           </button>
         </div>
       </nav>
+
+      {/* More Menu Sheet for Mobile */}
+      <Sheet open={showMoreMenu} onOpenChange={setShowMoreMenu}>
+        <SheetContent side="bottom" className="h-[60vh]">
+          <SheetHeader>
+            <SheetTitle>More Options</SheetTitle>
+            <SheetDescription>Additional menu options</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-2">
+            <button
+              onClick={() => {
+                setActiveTab("import-export")
+                setShowMoreMenu(false)
+              }}
+              className={`w-full flex items-center gap-3 p-4 rounded-lg text-left transition-colors ${
+                activeTab === "import-export"
+                  ? "bg-primary/10 text-primary"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+            >
+              <Database className="w-5 h-5" />
+              <div className="flex-1">
+                <p className="font-medium">Import/Export</p>
+                <p className="text-xs text-muted-foreground">Data management</p>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("qr-scanner")
+                setShowMoreMenu(false)
+              }}
+              className={`w-full flex items-center gap-3 p-4 rounded-lg text-left transition-colors ${
+                activeTab === "qr-scanner"
+                  ? "bg-primary/10 text-primary"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+            >
+              <QrCode className="w-5 h-5" />
+              <div className="flex-1">
+                <p className="font-medium">QR Scanner</p>
+                <p className="text-xs text-muted-foreground">Scan QR codes for inventory</p>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("physical-inventory")
+                setShowMoreMenu(false)
+              }}
+              className={`w-full flex items-center gap-3 p-4 rounded-lg text-left transition-colors ${
+                activeTab === "physical-inventory"
+                  ? "bg-primary/10 text-primary"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+            >
+              <ClipboardCheck className="w-5 h-5" />
+              <div className="flex-1">
+                <p className="font-medium">Physical Count</p>
+                <p className="text-xs text-muted-foreground">Physical inventory reports</p>
+              </div>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
