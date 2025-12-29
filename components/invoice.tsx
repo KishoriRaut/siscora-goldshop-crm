@@ -53,8 +53,8 @@ export function Invoice({ sale, onClose }: InvoiceProps) {
         <div className="p-6 space-y-6 print:p-8" data-invoice-content>
           {/* Shop Header */}
           <div className="text-center border-b border-border pb-4">
-            <h1 className="text-2xl font-bold text-foreground">{shopInfo?.shopName || "Gold Shop CRM"}</h1>
-            <p className="text-muted-foreground">सुन पसल व्यवस्थापन</p>
+            <h1 className="text-2xl font-bold text-foreground">{shopInfo?.shopName || "Siscora Gold"}</h1>
+            <p className="text-muted-foreground">Smart Gold Shop Management</p>
             {shopInfo?.address && (
               <p className="text-sm text-muted-foreground mt-2">{shopInfo.address}</p>
             )}

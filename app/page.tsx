@@ -93,10 +93,10 @@ export default function Home() {
               </div>
               <div className="min-w-0 flex-1">
                 <h1 className="text-base sm:text-lg md:text-xl font-semibold text-foreground truncate">
-                  {shopInfo?.shopName || "Gold Shop CRM"}
+                  {shopInfo?.shopName || "Siscora Gold"}
                 </h1>
                 <p className="text-xs text-muted-foreground hidden sm:block truncate">
-                  {shopInfo?.address || "सुन पसल व्यवस्थापन"}
+                  {shopInfo?.address || "Smart Gold Shop Management"}
                 </p>
               </div>
             </div>

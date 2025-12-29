@@ -8,14 +8,14 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Gold Shop CRM - सुन पसल व्यवस्थापन',
-  description: 'Complete Gold Shop Management System for Nepali Gold Shops - Manage customers, inventory, sales, purchases, and gold rates',
+  title: 'Siscora Gold - Smart Gold Shop Management',
+  description: 'Smart Gold Shop Management - Manage customers, inventory, sales, purchases, and gold rates',
   generator: 'Next.js',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Gold Shop CRM',
+    title: 'Siscora Gold',
   },
   formatDetection: {
     telephone: false,
@@ -50,7 +50,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Gold Shop CRM" />
+        <meta name="apple-mobile-web-app-title" content="Siscora Gold" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
       </head>
       <body className={`font-sans antialiased`}>

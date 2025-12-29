@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Gold Shop CRM',
-    short_name: 'Gold CRM',
-    description: 'सुन पसल व्यवस्थापन - Complete Gold Shop Management System for Nepali Gold Shops',
+    name: 'Siscora Gold',
+    short_name: 'Siscora Gold',
+    description: 'Smart Gold Shop Management',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
