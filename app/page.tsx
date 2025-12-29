@@ -149,7 +149,7 @@ export default function Home() {
               className="flex items-center gap-2 whitespace-nowrap shrink-0"
             >
               <TrendingUp className="w-4 h-4" />
-              Gold Rates
+              Rates
             </Button>
             <Button
               variant={activeTab === "purchases" ? "default" : "ghost"}

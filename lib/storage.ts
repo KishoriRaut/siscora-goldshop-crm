@@ -11,6 +11,7 @@ export interface InventoryItem {
   id: string
   name: string
   type: string
+  metalType: "gold" | "silver" // Metal type: gold or silver
   weight: number
   purity: string
   pricePerGram: number
@@ -49,15 +50,25 @@ export interface GoldRate {
   createdAt: string
 }
 
+export interface SilverRate {
+  id: string
+  date: string // ISO date string
+  purity925: number // Sterling silver (92.5%)
+  purity999: number // Pure silver (99.9%)
+  notes?: string
+  createdAt: string
+}
+
 export interface Purchase {
   id: string
   purchaseNumber: string // Sequential purchase number
   customerId: string
   customerName: string
-  itemName: string // Description of gold item purchased
+  itemName: string // Description of item purchased
   type: string // e.g., Ring, Necklace, Bangle
+  metalType: "gold" | "silver" // Metal type: gold or silver
   weight: number // Weight in grams
-  purity: string // e.g., 22K, 24K, 18K
+  purity: string // e.g., 22K, 24K, 18K for gold; 925, 999 for silver
   pricePerGram: number // Purchase price per gram
   totalWeight: number // Total weight (weight * quantity)
   quantity: number
@@ -119,6 +130,33 @@ export function getCurrentGoldRate(): GoldRate | null {
 
 export function getGoldRateByDate(date: string): GoldRate | null {
   const rates = getGoldRates()
+  const rate = rates.find(r => r.date === date)
+  return rate || null
+}
+
+export function getSilverRates(): SilverRate[] {
+  if (typeof window === "undefined") return []
+  const data = localStorage.getItem("goldshop_silver_rates")
+  return data ? JSON.parse(data) : []
+}
+
+export function saveSilverRates(rates: SilverRate[]) {
+  localStorage.setItem("goldshop_silver_rates", JSON.stringify(rates))
+}
+
+export function getCurrentSilverRate(): SilverRate | null {
+  const rates = getSilverRates()
+  if (rates.length === 0) return null
+  
+  // Get the most recent rate (assuming rates are sorted by date)
+  const sortedRates = [...rates].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  )
+  return sortedRates[0]
+}
+
+export function getSilverRateByDate(date: string): SilverRate | null {
+  const rates = getSilverRates()
   const rate = rates.find(r => r.date === date)
   return rate || null
 }

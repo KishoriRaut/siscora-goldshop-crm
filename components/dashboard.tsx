@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Users, Package, Receipt, TrendingUp, ShoppingCart, ArrowRight } from "lucide-react"
-import { getCustomers, getInventory, getSales, getCurrentGoldRate, getPurchases } from "@/lib/storage"
+import { getCustomers, getInventory, getSales, getCurrentGoldRate, getCurrentSilverRate, getPurchases } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 
 interface DashboardProps {
@@ -21,6 +21,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     totalPurchaseAmount: 0,
   })
   const [currentGoldRate, setCurrentGoldRate] = useState<ReturnType<typeof getCurrentGoldRate>>(null)
+  const [currentSilverRate, setCurrentSilverRate] = useState<ReturnType<typeof getCurrentSilverRate>>(null)
 
   useEffect(() => {
     const customers = getCustomers()
@@ -28,6 +29,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     const sales = getSales()
     const purchases = getPurchases()
     const goldRate = getCurrentGoldRate()
+    const silverRate = getCurrentSilverRate()
 
     const revenue = sales.reduce((sum, sale) => sum + sale.totalAmount, 0)
     const makingCharges = sales.reduce((sum, sale) => sum + (sale.makingCharges || 0), 0)
@@ -43,6 +45,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       totalPurchaseAmount: purchaseAmount,
     })
     setCurrentGoldRate(goldRate)
+    setCurrentSilverRate(silverRate)
   }, [])
 
   const formatCurrency = (amount: number) => {
@@ -53,7 +56,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold text-foreground">Dashboard</h2>
-        <p className="text-muted-foreground">Overview of your gold shop</p>
+        <p className="text-muted-foreground">Overview of your gold & silver shop</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -124,7 +127,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Gold Purchases</p>
+              <p className="text-sm text-muted-foreground">Gold & Silver Purchases</p>
               <p className="text-2xl font-semibold text-foreground mt-2">{stats.totalPurchases}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 {formatCurrency(stats.totalPurchaseAmount)} total
@@ -151,37 +154,65 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </Card>
       </div>
 
-      {currentGoldRate && (
-        <Card className="p-6 bg-primary/5 border-primary/20">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Current Gold Rates</h3>
-            <span className="text-sm text-muted-foreground">
-              {new Date(currentGoldRate.date).toLocaleDateString("en-NP", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-background rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">24K Gold</p>
-              <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity24K)}</p>
-              <p className="text-xs text-muted-foreground mt-1">per gram</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {currentGoldRate && (
+          <Card className="p-6 bg-primary/5 border-primary/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Current Gold Rates</h3>
+              <span className="text-sm text-muted-foreground">
+                {new Date(currentGoldRate.date).toLocaleDateString("en-NP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
             </div>
-            <div className="p-4 bg-background rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">22K Gold</p>
-              <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity22K)}</p>
-              <p className="text-xs text-muted-foreground mt-1">per gram</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-background rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">24K Gold</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity24K)}</p>
+                <p className="text-xs text-muted-foreground mt-1">per gram</p>
+              </div>
+              <div className="p-4 bg-background rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">22K Gold</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity22K)}</p>
+                <p className="text-xs text-muted-foreground mt-1">per gram</p>
+              </div>
+              <div className="p-4 bg-background rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">18K Gold</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity18K)}</p>
+                <p className="text-xs text-muted-foreground mt-1">per gram</p>
+              </div>
             </div>
-            <div className="p-4 bg-background rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">18K Gold</p>
-              <p className="text-xl font-bold text-foreground">{formatCurrency(currentGoldRate.purity18K)}</p>
-              <p className="text-xs text-muted-foreground mt-1">per gram</p>
+          </Card>
+        )}
+        {currentSilverRate && (
+          <Card className="p-6 bg-primary/5 border-primary/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Current Silver Rates</h3>
+              <span className="text-sm text-muted-foreground">
+                {new Date(currentSilverRate.date).toLocaleDateString("en-NP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
             </div>
-          </div>
-        </Card>
-      )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-background rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">999 Silver (Pure)</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(currentSilverRate.purity999)}</p>
+                <p className="text-xs text-muted-foreground mt-1">per gram</p>
+              </div>
+              <div className="p-4 bg-background rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">925 Silver (Sterling)</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(currentSilverRate.purity925)}</p>
+                <p className="text-xs text-muted-foreground mt-1">per gram</p>
+              </div>
+            </div>
+          </Card>
+        )}
+      </div>
 
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
@@ -225,7 +256,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             onClick={() => onNavigate?.("purchases")}
           >
             <div className="flex items-center justify-between w-full mb-2">
-              <p className="font-medium text-foreground">Record gold purchase</p>
+              <p className="font-medium text-foreground">Record purchase</p>
               <ArrowRight className="w-4 h-4 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground text-xs">Go to Purchases tab</p>
@@ -236,10 +267,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             onClick={() => onNavigate?.("gold-rates")}
           >
             <div className="flex items-center justify-between w-full mb-2">
-              <p className="font-medium text-foreground">Update gold rates</p>
+              <p className="font-medium text-foreground">Update rates</p>
               <ArrowRight className="w-4 h-4 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground text-xs">Go to Gold Rates tab</p>
+            <p className="text-muted-foreground text-xs">Go to Gold & Silver Rates tab</p>
           </Button>
         </div>
       </Card>

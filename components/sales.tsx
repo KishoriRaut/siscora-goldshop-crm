@@ -6,15 +6,27 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, FileText, Filter, X } from "lucide-react"
+import { Plus, FileText, Filter, X, Edit, Trash2 } from "lucide-react"
 import { getSales, saveSales, getCustomers, getInventory, saveInventory, getNextBillNumber, type Sale } from "@/lib/storage"
 import { Invoice } from "@/components/invoice"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export function Sales() {
   const [sales, setSales] = useState<Sale[]>([])
   const [customers, setCustomers] = useState<any[]>([])
   const [inventory, setInventory] = useState<any[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [editingSale, setEditingSale] = useState<Sale | null>(null)
+  const [deleteSale, setDeleteSale] = useState<Sale | null>(null)
   const [selectedSaleForInvoice, setSelectedSaleForInvoice] = useState<Sale | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
@@ -80,47 +92,202 @@ export function Sales() {
       return
     }
 
-    const newSale: Sale = {
-      id: Date.now().toString(),
-      billNumber: getNextBillNumber(),
-      customerId: formData.customerId,
-      customerName: customer.name,
-      itemId: formData.itemId,
-      itemName: item.name,
-      quantity,
-      pricePerUnit: item.totalValue,
-      goldValue,
-      makingCharges,
-      subtotal,
-      discount,
-      totalAmount,
-      paymentMethod: formData.paymentMethod,
-      paymentDetails: formData.paymentDetails || undefined,
-      createdAt: new Date().toISOString(),
+    if (editingSale) {
+      // Restore inventory from old sale first
+      const oldSale = editingSale
+      const oldItem = inventory.find((i) => i.id === oldSale.itemId) || 
+        sales.find((s) => s.id === oldSale.id) ? {
+          id: oldSale.itemId,
+          name: oldSale.itemName,
+          type: "",
+          weight: 0,
+          purity: "",
+          pricePerGram: oldSale.pricePerUnit,
+          quantity: 0,
+          totalValue: oldSale.pricePerUnit,
+          createdAt: "",
+        } : null
+
+      if (oldItem) {
+        // Restore old quantity
+        const restoredInventory = [...inventory]
+        const existingItemIndex = restoredInventory.findIndex((i) => i.id === oldItem.id)
+        
+        if (existingItemIndex >= 0) {
+          restoredInventory[existingItemIndex].quantity += oldSale.quantity
+          restoredInventory[existingItemIndex].totalValue = 
+            restoredInventory[existingItemIndex].pricePerGram * 
+            restoredInventory[existingItemIndex].weight * 
+            restoredInventory[existingItemIndex].quantity
+        } else {
+          // Item was removed, add it back
+          restoredInventory.push({
+            ...oldItem,
+            quantity: oldSale.quantity,
+            totalValue: oldSale.pricePerUnit * oldSale.quantity,
+          })
+        }
+        setInventory(restoredInventory)
+      }
+
+      // Update sale
+      const updatedSale: Sale = {
+        ...editingSale,
+        customerId: formData.customerId,
+        customerName: customer.name,
+        itemId: formData.itemId,
+        itemName: item.name,
+        quantity,
+        pricePerUnit: item.totalValue,
+        goldValue,
+        makingCharges,
+        subtotal,
+        discount,
+        totalAmount,
+        paymentMethod: formData.paymentMethod,
+        paymentDetails: formData.paymentDetails || undefined,
+      }
+
+      // Update inventory - reduce quantity for new sale
+      const updatedInventory = inventory.map((invItem) => {
+        if (invItem.id === item.id) {
+          const newQuantity = invItem.quantity - quantity
+          return {
+            ...invItem,
+            quantity: newQuantity >= 0 ? newQuantity : 0,
+            totalValue: newQuantity >= 0 ? (invItem.pricePerGram * invItem.weight * newQuantity) : 0,
+          }
+        }
+        return invItem
+      })
+      const filteredInventory = updatedInventory.filter((invItem) => invItem.quantity > 0)
+      
+      saveInventory(filteredInventory)
+      setInventory(filteredInventory)
+
+      const updatedSales = sales.map((s) => (s.id === editingSale.id ? updatedSale : s))
+      saveSales(updatedSales)
+      setSales(updatedSales)
+      setEditingSale(null)
+    } else {
+      // Create new sale
+      const newSale: Sale = {
+        id: Date.now().toString(),
+        billNumber: getNextBillNumber(),
+        customerId: formData.customerId,
+        customerName: customer.name,
+        itemId: formData.itemId,
+        itemName: item.name,
+        quantity,
+        pricePerUnit: item.totalValue,
+        goldValue,
+        makingCharges,
+        subtotal,
+        discount,
+        totalAmount,
+        paymentMethod: formData.paymentMethod,
+        paymentDetails: formData.paymentDetails || undefined,
+        createdAt: new Date().toISOString(),
+      }
+
+      // Update inventory - reduce quantity when item is sold
+      const updatedInventory = inventory.map((invItem) => {
+        if (invItem.id === item.id) {
+          const newQuantity = invItem.quantity - quantity
+          return {
+            ...invItem,
+            quantity: newQuantity >= 0 ? newQuantity : 0,
+            totalValue: newQuantity >= 0 ? (invItem.pricePerGram * invItem.weight * newQuantity) : 0,
+          }
+        }
+        return invItem
+      })
+      // Remove items with zero quantity
+      const filteredInventory = updatedInventory.filter((invItem) => invItem.quantity > 0)
+      
+      // Save updated inventory
+      saveInventory(filteredInventory)
+      setInventory(filteredInventory)
+
+      const updatedSales = [...sales, newSale]
+      saveSales(updatedSales)
+      setSales(updatedSales)
+    }
+    setFormData({
+      customerId: "",
+      itemId: "",
+      quantity: "1",
+      makingCharges: "0",
+      discount: "0",
+      paymentMethod: "cash",
+      paymentDetails: "",
+    })
+    setShowForm(false)
+  }
+
+  const handleEdit = (sale: Sale) => {
+    setEditingSale(sale)
+    setFormData({
+      customerId: sale.customerId,
+      itemId: sale.itemId,
+      quantity: sale.quantity.toString(),
+      makingCharges: sale.makingCharges.toString(),
+      discount: sale.discount.toString(),
+      paymentMethod: sale.paymentMethod,
+      paymentDetails: sale.paymentDetails || "",
+    })
+    setShowForm(true)
+  }
+
+  const handleDelete = () => {
+    if (!deleteSale) return
+
+    // Restore inventory quantity
+    const sale = deleteSale
+    const currentInventory = getInventory()
+    const item = currentInventory.find((i) => i.id === sale.itemId)
+
+    if (item) {
+      // Item exists, restore quantity
+      const updatedInventory = currentInventory.map((invItem) => {
+        if (invItem.id === sale.itemId) {
+          return {
+            ...invItem,
+            quantity: invItem.quantity + sale.quantity,
+            totalValue: invItem.pricePerGram * invItem.weight * (invItem.quantity + sale.quantity),
+          }
+        }
+        return invItem
+      })
+      saveInventory(updatedInventory)
+      setInventory(updatedInventory)
+    } else {
+      // Item was removed, recreate it
+      const restoredItem = {
+        id: sale.itemId,
+        name: sale.itemName,
+        type: "",
+        weight: 0,
+        purity: "",
+        pricePerGram: sale.pricePerUnit,
+        quantity: sale.quantity,
+        totalValue: sale.pricePerUnit * sale.quantity,
+        createdAt: sale.createdAt,
+      }
+      const updatedInventory = [...currentInventory, restoredItem]
+      saveInventory(updatedInventory)
+      setInventory(updatedInventory)
     }
 
-    // Update inventory - reduce quantity when item is sold
-    const updatedInventory = inventory.map((invItem) => {
-      if (invItem.id === item.id) {
-        const newQuantity = invItem.quantity - quantity
-        return {
-          ...invItem,
-          quantity: newQuantity >= 0 ? newQuantity : 0,
-          totalValue: newQuantity >= 0 ? (invItem.pricePerGram * invItem.weight * newQuantity) : 0,
-        }
-      }
-      return invItem
-    })
-    // Remove items with zero quantity
-    const filteredInventory = updatedInventory.filter((invItem) => invItem.quantity > 0)
-    
-    // Save updated inventory
-    saveInventory(filteredInventory)
-    setInventory(filteredInventory)
-
-    const updatedSales = [...sales, newSale]
+    // Remove sale
+    const updatedSales = sales.filter((s) => s.id !== deleteSale.id)
     saveSales(updatedSales)
     setSales(updatedSales)
+    setDeleteSale(null)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingSale(null)
     setFormData({
       customerId: "",
       itemId: "",
@@ -152,7 +319,9 @@ export function Sales() {
 
       {showForm && (
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">New Sale</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            {editingSale ? "Edit Sale" : "New Sale"}
+          </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -285,7 +454,9 @@ export function Sales() {
                 <h4 className="text-sm font-semibold text-foreground">Price Breakdown</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-muted-foreground">Gold Value:</p>
+                    <p className="text-muted-foreground">
+                      {inventory.find((i) => i.id === formData.itemId)?.metalType === "silver" ? "Silver" : "Gold"} Value:
+                    </p>
                     <p className="font-medium text-foreground">
                       {formData.itemId && formData.quantity
                         ? formatCurrency(
@@ -335,8 +506,8 @@ export function Sales() {
               </div>
             )}
             <div className="flex gap-2">
-              <Button type="submit">Record Sale</Button>
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+              <Button type="submit">{editingSale ? "Update Sale" : "Record Sale"}</Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit}>
                 Cancel
               </Button>
             </div>
@@ -493,7 +664,12 @@ export function Sales() {
                     <p className="font-medium text-foreground">{sale.quantity}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Gold Value</p>
+                    <p className="text-muted-foreground">
+                      {(() => {
+                        const item = inventory.find((i) => i.id === sale.itemId)
+                        return item?.metalType === "silver" ? "Silver" : "Gold"
+                      })()} Value
+                    </p>
                     <p className="font-medium text-foreground">
                       {formatCurrency(
                         sale.goldValue !== undefined
@@ -523,15 +699,33 @@ export function Sales() {
                       )}
                     </span>
                   </div>
-                  <Button
-                    onClick={() => setSelectedSaleForInvoice(sale)}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="w-4 h-4" />
-                    View / Print Bill
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(sale)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteSale(sale)}
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={() => setSelectedSaleForInvoice(sale)}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      View / Print Bill
+                    </Button>
+                  </div>
                 </div>
               </div>
               ))
@@ -543,6 +737,28 @@ export function Sales() {
       {selectedSaleForInvoice && (
         <Invoice sale={selectedSaleForInvoice} onClose={() => setSelectedSaleForInvoice(null)} />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteSale} onOpenChange={() => setDeleteSale(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Sale</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete sale <strong>Bill #{deleteSale?.billNumber}</strong> for{" "}
+              <strong>{deleteSale?.customerName}</strong>? This will restore the inventory quantity. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

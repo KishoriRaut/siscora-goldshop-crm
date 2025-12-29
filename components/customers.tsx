@@ -6,13 +6,25 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Search, Phone, Mail } from "lucide-react"
+import { Plus, Search, Phone, Mail, Edit, Trash2 } from "lucide-react"
 import { getCustomers, saveCustomers, type Customer } from "@/lib/storage"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showForm, setShowForm] = useState(false)
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
+  const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -26,14 +38,55 @@ export function Customers() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const newCustomer: Customer = {
-      id: Date.now().toString(),
-      ...formData,
-      createdAt: new Date().toISOString(),
+    
+    if (editingCustomer) {
+      // Update existing customer
+      const updatedCustomers = customers.map((customer) =>
+        customer.id === editingCustomer.id
+          ? { ...customer, ...formData }
+          : customer
+      )
+      saveCustomers(updatedCustomers)
+      setCustomers(updatedCustomers)
+      setEditingCustomer(null)
+    } else {
+      // Create new customer
+      const newCustomer: Customer = {
+        id: Date.now().toString(),
+        ...formData,
+        createdAt: new Date().toISOString(),
+      }
+      const updatedCustomers = [...customers, newCustomer]
+      saveCustomers(updatedCustomers)
+      setCustomers(updatedCustomers)
     }
-    const updatedCustomers = [...customers, newCustomer]
+    
+    setFormData({ name: "", phone: "", email: "", address: "" })
+    setShowForm(false)
+  }
+
+  const handleEdit = (customer: Customer) => {
+    setEditingCustomer(customer)
+    setFormData({
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      address: customer.address,
+    })
+    setShowForm(true)
+  }
+
+  const handleDelete = () => {
+    if (!deleteCustomer) return
+    
+    const updatedCustomers = customers.filter((c) => c.id !== deleteCustomer.id)
     saveCustomers(updatedCustomers)
     setCustomers(updatedCustomers)
+    setDeleteCustomer(null)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingCustomer(null)
     setFormData({ name: "", phone: "", email: "", address: "" })
     setShowForm(false)
   }
@@ -57,7 +110,9 @@ export function Customers() {
 
       {showForm && (
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">New Customer</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            {editingCustomer ? "Edit Customer" : "New Customer"}
+          </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -97,8 +152,8 @@ export function Customers() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button type="submit">Save Customer</Button>
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+              <Button type="submit">{editingCustomer ? "Update Customer" : "Save Customer"}</Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit}>
                 Cancel
               </Button>
             </div>
@@ -126,7 +181,7 @@ export function Customers() {
             filteredCustomers.map((customer) => (
               <div key={customer.id} className="p-4 bg-secondary rounded-lg">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex-1">
                     <p className="font-semibold text-foreground">{customer.name}</p>
                     <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
@@ -142,15 +197,51 @@ export function Customers() {
                       {customer.address && <p>{customer.address}</p>}
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(customer.createdAt).toLocaleDateString("en-NP")}
-                  </p>
+                  <div className="flex items-center gap-2 ml-4">
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(customer.createdAt).toLocaleDateString("en-NP")}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(customer)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteCustomer(customer)}
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteCustomer} onOpenChange={() => setDeleteCustomer(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deleteCustomer?.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

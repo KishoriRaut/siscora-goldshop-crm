@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, ShoppingCart, TrendingDown, Filter, X } from "lucide-react"
+import { Plus, ShoppingCart, TrendingDown, Filter, X, Edit, Trash2 } from "lucide-react"
 import {
   getPurchases,
   savePurchases,
@@ -16,17 +16,31 @@ import {
   saveInventory,
   getNextPurchaseNumber,
   getCurrentGoldRate,
+  getCurrentSilverRate,
   type Purchase,
   type InventoryItem,
   type Customer,
 } from "@/lib/storage"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export function Purchases() {
   const [purchases, setPurchases] = useState<Purchase[]>([])
   const [customers, setCustomers] = useState<any[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [currentGoldRate, setCurrentGoldRate] = useState<ReturnType<typeof getCurrentGoldRate>>(null)
+  const [currentSilverRate, setCurrentSilverRate] = useState<ReturnType<typeof getCurrentSilverRate>>(null)
   const [showForm, setShowForm] = useState(false)
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null)
+  const [deletePurchase, setDeletePurchase] = useState<Purchase | null>(null)
   const [addToInventory, setAddToInventory] = useState(true) // Option to add purchased gold to inventory
   const [showAddSeller, setShowAddSeller] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -47,6 +61,7 @@ export function Purchases() {
     customerId: "",
     itemName: "",
     type: "",
+    metalType: "gold" as "gold" | "silver",
     weight: "",
     purity: "22K",
     pricePerGram: "",
@@ -59,6 +74,7 @@ export function Purchases() {
     setCustomers(getCustomers())
     setInventory(getInventory())
     setCurrentGoldRate(getCurrentGoldRate())
+    setCurrentSilverRate(getCurrentSilverRate())
   }, [])
 
   const handleAddSeller = (e: React.FormEvent) => {
@@ -91,48 +107,160 @@ export function Purchases() {
     const totalWeight = weight * quantity
     const totalAmount = totalWeight * pricePerGram
 
-    const newPurchase: Purchase = {
-      id: Date.now().toString(),
-      purchaseNumber: getNextPurchaseNumber(),
-      customerId: formData.customerId,
-      customerName: seller.name,
-      itemName: formData.itemName,
-      type: formData.type,
-      weight,
-      purity: formData.purity,
-      pricePerGram,
-      totalWeight,
-      quantity,
-      totalAmount,
-      notes: formData.notes || undefined,
-      createdAt: new Date().toISOString(),
-    }
-
-    // Optionally add purchased gold to inventory
-    if (addToInventory) {
-      const newInventoryItem: InventoryItem = {
-        id: Date.now().toString(),
-        name: formData.itemName,
+    if (editingPurchase) {
+      // Handle edit - need to check if inventory was added and adjust
+      // For simplicity, we'll remove old inventory item if it exists and add new one
+      // In production, you'd want to track which inventory items came from which purchases
+      
+      const updatedPurchase: Purchase = {
+        ...editingPurchase,
+        customerId: formData.customerId,
+        customerName: seller.name,
+        itemName: formData.itemName,
         type: formData.type,
+        metalType: formData.metalType,
         weight,
         purity: formData.purity,
-        pricePerGram: pricePerGram, // Use purchase price as inventory price
+        pricePerGram,
+        totalWeight,
         quantity,
-        totalValue: totalAmount,
+        totalAmount,
+        notes: formData.notes || undefined,
+      }
+
+      // Update inventory if needed (simplified - in production, track purchase-inventory relationship)
+      if (addToInventory) {
+        // Remove old inventory item if it matches the purchase
+        const filteredInventory = inventory.filter((item) => {
+          // Simple matching - in production, track purchase ID in inventory
+          return !(item.name === editingPurchase.itemName && 
+                   item.type === editingPurchase.type &&
+                   Math.abs(item.pricePerGram - editingPurchase.pricePerGram) < 0.01)
+        })
+
+        // Add new inventory item
+        const newInventoryItem: InventoryItem = {
+          id: Date.now().toString(),
+          name: formData.itemName,
+          type: formData.type,
+          metalType: formData.metalType,
+          weight,
+          purity: formData.purity,
+          pricePerGram: pricePerGram,
+          quantity,
+          totalValue: totalAmount,
+          createdAt: new Date().toISOString(),
+        }
+        const updatedInventory = [...filteredInventory, newInventoryItem]
+        saveInventory(updatedInventory)
+        setInventory(updatedInventory)
+      }
+
+      const updatedPurchases = purchases.map((p) => (p.id === editingPurchase.id ? updatedPurchase : p))
+      savePurchases(updatedPurchases)
+      setPurchases(updatedPurchases)
+      setEditingPurchase(null)
+    } else {
+      // Create new purchase
+      const newPurchase: Purchase = {
+        id: Date.now().toString(),
+        purchaseNumber: getNextPurchaseNumber(),
+        customerId: formData.customerId,
+        customerName: seller.name,
+        itemName: formData.itemName,
+        type: formData.type,
+        metalType: formData.metalType,
+        weight,
+        purity: formData.purity,
+        pricePerGram,
+        totalWeight,
+        quantity,
+        totalAmount,
+        notes: formData.notes || undefined,
         createdAt: new Date().toISOString(),
       }
-      const updatedInventory = [...inventory, newInventoryItem]
-      saveInventory(updatedInventory)
-      setInventory(updatedInventory)
+
+      // Optionally add purchased item to inventory
+      if (addToInventory) {
+        const newInventoryItem: InventoryItem = {
+          id: Date.now().toString(),
+          name: formData.itemName,
+          type: formData.type,
+          metalType: formData.metalType,
+          weight,
+          purity: formData.purity,
+          pricePerGram: pricePerGram,
+          quantity,
+          totalValue: totalAmount,
+          createdAt: new Date().toISOString(),
+        }
+        const updatedInventory = [...inventory, newInventoryItem]
+        saveInventory(updatedInventory)
+        setInventory(updatedInventory)
+      }
+
+      const updatedPurchases = [...purchases, newPurchase]
+      savePurchases(updatedPurchases)
+      setPurchases(updatedPurchases)
     }
 
-    const updatedPurchases = [...purchases, newPurchase]
-    savePurchases(updatedPurchases)
-    setPurchases(updatedPurchases)
     setFormData({
       customerId: "",
       itemName: "",
       type: "",
+      weight: "",
+      purity: "22K",
+      pricePerGram: "",
+      quantity: "1",
+      notes: "",
+    })
+    setShowForm(false)
+  }
+
+  const handleEdit = (purchase: Purchase) => {
+    setEditingPurchase(purchase)
+    setFormData({
+      customerId: purchase.customerId,
+      itemName: purchase.itemName,
+      type: purchase.type,
+      metalType: purchase.metalType || "gold",
+      weight: purchase.weight.toString(),
+      purity: purchase.purity,
+      pricePerGram: purchase.pricePerGram.toString(),
+      quantity: purchase.quantity.toString(),
+      notes: purchase.notes || "",
+    })
+    setShowForm(true)
+  }
+
+  const handleDelete = () => {
+    if (!deletePurchase) return
+
+    // Remove from inventory if it was added
+    // Simplified matching - in production, track purchase-inventory relationship
+    const updatedInventory = inventory.filter((item) => {
+      return !(item.name === deletePurchase.itemName && 
+               item.type === deletePurchase.type &&
+               Math.abs(item.pricePerGram - deletePurchase.pricePerGram) < 0.01 &&
+               item.quantity === deletePurchase.quantity)
+    })
+    saveInventory(updatedInventory)
+    setInventory(updatedInventory)
+
+    // Remove purchase
+    const updatedPurchases = purchases.filter((p) => p.id !== deletePurchase.id)
+    savePurchases(updatedPurchases)
+    setPurchases(updatedPurchases)
+    setDeletePurchase(null)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingPurchase(null)
+    setFormData({
+      customerId: "",
+      itemName: "",
+      type: "",
+      metalType: "gold",
       weight: "",
       purity: "22K",
       pricePerGram: "",
@@ -149,17 +277,26 @@ export function Purchases() {
   const totalPurchaseAmount = purchases.reduce((sum, purchase) => sum + purchase.totalAmount, 0)
   const totalWeightPurchased = purchases.reduce((sum, purchase) => sum + purchase.totalWeight, 0)
 
-  // Calculate estimated current value based on current gold rate
+  // Calculate estimated current value based on current rates
   const getEstimatedCurrentValue = (purchase: Purchase) => {
-    if (!currentGoldRate) return 0
-    const purityMap: Record<string, number> = {
-      "24K": currentGoldRate.purity24K,
-      "22K": currentGoldRate.purity22K,
-      "18K": currentGoldRate.purity18K,
-      "20K": currentGoldRate.purity20K || currentGoldRate.purity22K,
+    if (purchase.metalType === "gold") {
+      if (!currentGoldRate) return 0
+      const purityMap: Record<string, number> = {
+        "24K": currentGoldRate.purity24K,
+        "22K": currentGoldRate.purity22K,
+        "18K": currentGoldRate.purity18K,
+        "20K": currentGoldRate.purity20K || currentGoldRate.purity22K,
+      }
+      const currentRate = purityMap[purchase.purity] || currentGoldRate.purity22K
+      return purchase.totalWeight * currentRate
+    } else {
+      // Silver
+      if (!currentSilverRate) return 0
+      const currentRate = purchase.purity === "999" 
+        ? currentSilverRate.purity999 
+        : currentSilverRate.purity925
+      return purchase.totalWeight * currentRate
     }
-    const currentRate = purityMap[purchase.purity] || currentGoldRate.purity22K
-    return purchase.totalWeight * currentRate
   }
 
   const sortedPurchases = [...purchases].sort(
@@ -170,8 +307,8 @@ export function Purchases() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Gold Purchases</h2>
-          <p className="text-muted-foreground">Buy gold from customers</p>
+          <h2 className="text-2xl font-semibold text-foreground">Gold & Silver Purchases</h2>
+          <p className="text-muted-foreground">Buy gold and silver from sellers</p>
         </div>
         <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
@@ -315,7 +452,7 @@ export function Purchases() {
                       ))}
                     </select>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Select the seller you are buying gold from
+                      Select the seller you are buying {formData.metalType === "gold" ? "gold" : "silver"} from
                     </p>
                   </>
                 )}
@@ -339,6 +476,25 @@ export function Purchases() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Metal Type *</label>
+                <select
+                  required
+                  value={formData.metalType}
+                  onChange={(e) => {
+                    const metalType = e.target.value as "gold" | "silver"
+                    setFormData({ 
+                      ...formData, 
+                      metalType,
+                      purity: metalType === "gold" ? "22K" : "925"
+                    })
+                  }}
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
+                >
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Purity *</label>
                 <select
                   required
@@ -346,10 +502,19 @@ export function Purchases() {
                   onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
                 >
-                  <option value="24K">24K</option>
-                  <option value="22K">22K</option>
-                  <option value="20K">20K</option>
-                  <option value="18K">18K</option>
+                  {formData.metalType === "gold" ? (
+                    <>
+                      <option value="24K">24K</option>
+                      <option value="22K">22K</option>
+                      <option value="20K">20K</option>
+                      <option value="18K">18K</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="999">999 (Pure Silver)</option>
+                      <option value="925">925 (Sterling Silver)</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div>
@@ -362,7 +527,7 @@ export function Purchases() {
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                   placeholder="0.00"
                 />
-                {currentGoldRate && formData.purity && (
+                {formData.metalType === "gold" && currentGoldRate && formData.purity && (
                   <p className="text-xs text-muted-foreground mt-1">
                     Current market rate: {formatCurrency(
                       formData.purity === "24K"
@@ -372,6 +537,15 @@ export function Purchases() {
                           : formData.purity === "20K"
                             ? (currentGoldRate.purity20K || currentGoldRate.purity22K)
                             : currentGoldRate.purity18K
+                    )}/gram
+                  </p>
+                )}
+                {formData.metalType === "silver" && currentSilverRate && formData.purity && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Current market rate: {formatCurrency(
+                      formData.purity === "999"
+                        ? currentSilverRate.purity999
+                        : currentSilverRate.purity925
                     )}/gram
                   </p>
                 )}
@@ -416,7 +590,7 @@ export function Purchases() {
                 className="w-4 h-4"
               />
               <label htmlFor="addToInventory" className="text-sm text-foreground cursor-pointer">
-                Add purchased gold to inventory automatically
+                Add purchased {formData.metalType === "gold" ? "gold" : "silver"} to inventory automatically
               </label>
             </div>
             {formData.weight && formData.pricePerGram && formData.quantity && (
@@ -434,8 +608,8 @@ export function Purchases() {
               </div>
             )}
             <div className="flex gap-2">
-              <Button type="submit">Record Purchase</Button>
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+              <Button type="submit">{editingPurchase ? "Update Purchase" : "Record Purchase"}</Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit}>
                 Cancel
               </Button>
             </div>
@@ -601,8 +775,10 @@ export function Purchases() {
                         <p className="font-medium text-foreground">{purchase.totalWeight}g</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Purity</p>
-                        <p className="font-medium text-foreground">{purchase.purity}</p>
+                        <p className="text-muted-foreground">Metal / Purity</p>
+                        <p className="font-medium text-foreground">
+                          {purchase.metalType === "silver" ? "Silver" : "Gold"} - {purchase.purity}
+                        </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Price/Gram</p>
@@ -630,6 +806,30 @@ export function Purchases() {
                         </div>
                       </div>
                     )}
+                    {purchase.notes && (
+                      <div className="pt-3 border-t border-border mt-3">
+                        <p className="text-muted-foreground text-xs">Notes:</p>
+                        <p className="text-sm text-foreground">{purchase.notes}</p>
+                      </div>
+                    )}
+                    <div className="pt-3 border-t border-border mt-3 flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(purchase)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeletePurchase(purchase)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 )
               })
@@ -637,6 +837,28 @@ export function Purchases() {
           })()}
         </div>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletePurchase} onOpenChange={() => setDeletePurchase(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Purchase</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete purchase <strong>{deletePurchase?.purchaseNumber}</strong> from{" "}
+              <strong>{deletePurchase?.customerName}</strong>? This will remove the item from inventory if it was added. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

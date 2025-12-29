@@ -10,16 +10,19 @@ import {
   getSales,
   getPurchases,
   getGoldRates,
+  getSilverRates,
   saveCustomers,
   saveInventory,
   saveSales,
   savePurchases,
   saveGoldRates,
+  saveSilverRates,
   type Customer,
   type InventoryItem,
   type Sale,
   type Purchase,
   type GoldRate,
+  type SilverRate,
 } from "@/lib/storage"
 
 export function ImportExport() {
@@ -32,6 +35,7 @@ export function ImportExport() {
       sales: getSales(),
       purchases: getPurchases(),
       goldRates: getGoldRates(),
+      silverRates: getSilverRates(),
       exportDate: new Date().toISOString(),
       version: "1.0",
     }
@@ -84,6 +88,7 @@ export function ImportExport() {
           "Seller Name",
           "Item Name",
           "Type",
+          "Metal Type",
           "Weight (g)",
           "Purity",
           "Price/Gram",
@@ -95,7 +100,7 @@ export function ImportExport() {
       case "inventory":
         data = getInventory()
         filename = "inventory"
-        headers = ["Name", "Type", "Weight (g)", "Purity", "Price/Gram", "Quantity", "Total Value"]
+        headers = ["Name", "Type", "Metal Type", "Weight (g)", "Purity", "Price/Gram", "Quantity", "Total Value"]
         break
     }
 
@@ -124,31 +129,33 @@ export function ImportExport() {
             row.createdAt
           )
           break
-        case "purchases":
-          values.push(
-            row.purchaseNumber || "",
-            row.customerName,
-            row.itemName,
-            row.type,
-            row.weight.toString(),
-            row.purity,
-            row.pricePerGram.toString(),
-            row.quantity.toString(),
-            row.totalAmount.toString(),
-            row.createdAt
-          )
-          break
-        case "inventory":
-          values.push(
-            row.name,
-            row.type,
-            row.weight.toString(),
-            row.purity,
-            row.pricePerGram.toString(),
-            row.quantity.toString(),
-            row.totalValue.toString()
-          )
-          break
+      case "purchases":
+        values.push(
+          row.purchaseNumber || "",
+          row.customerName,
+          row.itemName,
+          row.type,
+          row.metalType || "gold",
+          row.weight.toString(),
+          row.purity,
+          row.pricePerGram.toString(),
+          row.quantity.toString(),
+          row.totalAmount.toString(),
+          row.createdAt
+        )
+        break
+      case "inventory":
+        values.push(
+          row.name,
+          row.type,
+          row.metalType || "gold",
+          row.weight.toString(),
+          row.purity,
+          row.pricePerGram.toString(),
+          row.quantity.toString(),
+          row.totalValue.toString()
+        )
+        break
       }
       csvRows.push(values.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
     }
@@ -181,6 +188,7 @@ export function ImportExport() {
         if (data.sales) saveSales(data.sales as Sale[])
         if (data.purchases) savePurchases(data.purchases as Purchase[])
         if (data.goldRates) saveGoldRates(data.goldRates as GoldRate[])
+        if (data.silverRates) saveSilverRates(data.silverRates as SilverRate[])
 
         alert("Data imported successfully! Please refresh the page to see changes.")
         window.location.reload()
@@ -285,7 +293,7 @@ export function ImportExport() {
 
       <Card className="p-6 bg-muted">
         <h3 className="text-sm font-semibold text-foreground mb-2">Data Summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground">Customers</p>
             <p className="font-semibold text-foreground">{getCustomers().length}</p>
@@ -305,6 +313,10 @@ export function ImportExport() {
           <div>
             <p className="text-muted-foreground">Gold Rates</p>
             <p className="font-semibold text-foreground">{getGoldRates().length}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Silver Rates</p>
+            <p className="font-semibold text-foreground">{getSilverRates().length}</p>
           </div>
         </div>
       </Card>

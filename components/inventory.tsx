@@ -6,12 +6,25 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Weight, Filter, X } from "lucide-react"
+import { Plus, Weight, Filter, X, Edit, Trash2 } from "lucide-react"
 import { getInventory, saveInventory, type InventoryItem } from "@/lib/storage"
+import { getSales } from "@/lib/storage"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export function Inventory() {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
+  const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
     type: "",
@@ -21,6 +34,7 @@ export function Inventory() {
   const [formData, setFormData] = useState({
     name: "",
     type: "",
+    metalType: "gold" as "gold" | "silver",
     weight: "",
     purity: "",
     pricePerGram: "",
@@ -33,10 +47,11 @@ export function Inventory() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const newItem: InventoryItem = {
-      id: Date.now().toString(),
+    
+    const itemData = {
       name: formData.name,
       type: formData.type,
+      metalType: formData.metalType,
       weight: Number.parseFloat(formData.weight),
       purity: formData.purity,
       pricePerGram: Number.parseFloat(formData.pricePerGram),
@@ -45,12 +60,70 @@ export function Inventory() {
         Number.parseFloat(formData.weight) *
         Number.parseFloat(formData.pricePerGram) *
         Number.parseInt(formData.quantity),
-      createdAt: new Date().toISOString(),
     }
-    const updatedInventory = [...inventory, newItem]
+
+    if (editingItem) {
+      // Update existing item
+      const updatedInventory = inventory.map((item) =>
+        item.id === editingItem.id
+          ? { ...item, ...itemData }
+          : item
+      )
+      saveInventory(updatedInventory)
+      setInventory(updatedInventory)
+      setEditingItem(null)
+    } else {
+      // Create new item
+      const newItem: InventoryItem = {
+        id: Date.now().toString(),
+        ...itemData,
+        createdAt: new Date().toISOString(),
+      }
+      const updatedInventory = [...inventory, newItem]
+      saveInventory(updatedInventory)
+      setInventory(updatedInventory)
+    }
+    
+    setFormData({ name: "", type: "", metalType: "gold", weight: "", purity: "", pricePerGram: "", quantity: "1" })
+    setShowForm(false)
+  }
+
+  const handleEdit = (item: InventoryItem) => {
+    setEditingItem(item)
+    setFormData({
+      name: item.name,
+      type: item.type,
+      metalType: item.metalType || "gold",
+      weight: item.weight.toString(),
+      purity: item.purity,
+      pricePerGram: item.pricePerGram.toString(),
+      quantity: item.quantity.toString(),
+    })
+    setShowForm(true)
+  }
+
+  const handleDelete = () => {
+    if (!deleteItem) return
+
+    // Check if item is used in any sales
+    const sales = getSales()
+    const isUsedInSales = sales.some((sale) => sale.itemId === deleteItem.id)
+
+    if (isUsedInSales) {
+      alert("Cannot delete this item because it has been used in sales. Please remove the sales first.")
+      setDeleteItem(null)
+      return
+    }
+
+    const updatedInventory = inventory.filter((item) => item.id !== deleteItem.id)
     saveInventory(updatedInventory)
     setInventory(updatedInventory)
-    setFormData({ name: "", type: "", weight: "", purity: "", pricePerGram: "", quantity: "1" })
+    setDeleteItem(null)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingItem(null)
+    setFormData({ name: "", type: "", metalType: "gold", weight: "", purity: "", pricePerGram: "", quantity: "1" })
     setShowForm(false)
   }
 
@@ -87,7 +160,9 @@ export function Inventory() {
 
       {showForm && (
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">New Inventory Item</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            {editingItem ? "Edit Inventory Item" : "Add Inventory Item"}
+          </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -109,6 +184,25 @@ export function Inventory() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Metal Type *</label>
+                <select
+                  required
+                  value={formData.metalType}
+                  onChange={(e) => {
+                    const metalType = e.target.value as "gold" | "silver"
+                    setFormData({ 
+                      ...formData, 
+                      metalType,
+                      purity: "" // Reset purity when metal type changes
+                    })
+                  }}
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
+                >
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Weight (grams) *</label>
                 <Input
                   required
@@ -125,7 +219,7 @@ export function Inventory() {
                   required
                   value={formData.purity}
                   onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
-                  placeholder="e.g., 22K, 24K, 18K"
+                  placeholder={formData.metalType === "gold" ? "e.g., 22K, 24K, 18K" : "e.g., 925, 999"}
                 />
               </div>
               <div>
@@ -152,8 +246,8 @@ export function Inventory() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button type="submit">Save Item</Button>
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+              <Button type="submit">{editingItem ? "Update Item" : "Save Item"}</Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit}>
                 Cancel
               </Button>
             </div>
@@ -261,8 +355,10 @@ export function Inventory() {
                     <p className="font-medium text-foreground">{item.weight}g</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Purity</p>
-                    <p className="font-medium text-foreground">{item.purity}</p>
+                    <p className="text-muted-foreground">Metal / Purity</p>
+                    <p className="font-medium text-foreground">
+                      {item.metalType === "silver" ? "Silver" : "Gold"} - {item.purity}
+                    </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Price/g</p>
@@ -279,6 +375,33 @@ export function Inventory() {
           })()}
         </div>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Inventory Item</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deleteItem?.name}</strong>? This action cannot be undone.
+              {deleteItem && getSales().some((sale) => sale.itemId === deleteItem.id) && (
+                <span className="block mt-2 text-destructive font-medium">
+                  Warning: This item has been used in sales and cannot be deleted.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteItem ? getSales().some((sale) => sale.itemId === deleteItem.id) : false}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
