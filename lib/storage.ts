@@ -18,6 +18,29 @@ export interface InventoryItem {
   pricePerGram: number
   quantity: number
   totalValue: number
+  qrCode?: string // QR code data (JSON string of item data)
+  createdAt: string
+}
+
+export interface PhysicalInventoryCount {
+  id: string
+  itemId: string
+  itemName: string
+  scannedQuantity: number
+  expectedQuantity: number
+  discrepancy: number // scannedQuantity - expectedQuantity
+  scannedAt: string
+  countedBy?: string
+  notes?: string
+}
+
+export interface PhysicalInventoryReport {
+  id: string
+  reportDate: string
+  totalItemsScanned: number
+  totalItemsExpected: number
+  itemsWithDiscrepancy: number
+  counts: PhysicalInventoryCount[]
   createdAt: string
 }
 
@@ -221,4 +244,34 @@ export function getNextPurchaseNumber(): string {
   
   // Format as P + 4-digit number with leading zeros
   return `P${nextNumber.toString().padStart(4, "0")}`
+}
+
+export function getPhysicalInventoryReports(): PhysicalInventoryReport[] {
+  if (typeof window === "undefined") return []
+  const data = localStorage.getItem("goldshop_physical_inventory_reports")
+  return data ? JSON.parse(data) : []
+}
+
+export function savePhysicalInventoryReports(reports: PhysicalInventoryReport[]) {
+  localStorage.setItem("goldshop_physical_inventory_reports", JSON.stringify(reports))
+}
+
+export function addPhysicalInventoryReport(report: PhysicalInventoryReport) {
+  const reports = getPhysicalInventoryReports()
+  reports.push(report)
+  savePhysicalInventoryReports(reports)
+}
+
+export function getCurrentPhysicalInventoryCounts(): PhysicalInventoryCount[] {
+  if (typeof window === "undefined") return []
+  const data = localStorage.getItem("goldshop_current_physical_counts")
+  return data ? JSON.parse(data) : []
+}
+
+export function saveCurrentPhysicalInventoryCounts(counts: PhysicalInventoryCount[]) {
+  localStorage.setItem("goldshop_current_physical_counts", JSON.stringify(counts))
+}
+
+export function clearCurrentPhysicalInventoryCounts() {
+  localStorage.removeItem("goldshop_current_physical_counts")
 }

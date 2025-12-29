@@ -6,9 +6,17 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Weight, Filter, X, Edit, Trash2 } from "lucide-react"
+import { Plus, Weight, Filter, X, Edit, Trash2, QrCode, Printer, ClipboardCheck, Eye } from "lucide-react"
 import { getInventory, saveInventory, type InventoryItem } from "@/lib/storage"
 import { getSales } from "@/lib/storage"
+import { generateQRCodeData, generateQRCodeImage, printQRCodeLabel } from "@/lib/qrcode"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Pagination } from "@/components/ui/pagination"
 import {
   AlertDialog,
@@ -21,7 +29,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-export function Inventory() {
+interface InventoryProps {
+  onNavigate?: (tab: string) => void
+}
+
+export function Inventory({ onNavigate }: InventoryProps) {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
@@ -43,6 +55,10 @@ export function Inventory() {
     pricePerGram: "",
     quantity: "1",
   })
+  const [viewingQRCode, setViewingQRCode] = useState<{
+    item: InventoryItem | null
+    image: string | null
+  }>({ item: null, image: null })
 
   useEffect(() => {
     setInventory(getInventory())
@@ -53,7 +69,7 @@ export function Inventory() {
     setCurrentPage(1)
   }, [filters.type, filters.purity, filters.searchTerm, filters.metalType])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     const itemData = {
@@ -72,10 +88,11 @@ export function Inventory() {
 
     if (editingItem) {
       // Update existing item
+      const updatedItem = { ...editingItem, ...itemData }
+      // Generate QR code data
+      updatedItem.qrCode = generateQRCodeData(updatedItem)
       const updatedInventory = inventory.map((item) =>
-        item.id === editingItem.id
-          ? { ...item, ...itemData }
-          : item
+        item.id === editingItem.id ? updatedItem : item
       )
       saveInventory(updatedInventory)
       setInventory(updatedInventory)
@@ -87,6 +104,8 @@ export function Inventory() {
         ...itemData,
         createdAt: new Date().toISOString(),
       }
+      // Generate QR code data
+      newItem.qrCode = generateQRCodeData(newItem)
       const updatedInventory = [...inventory, newItem]
       saveInventory(updatedInventory)
       setInventory(updatedInventory)
@@ -94,6 +113,47 @@ export function Inventory() {
     
     setFormData({ name: "", type: "", metalType: "gold", weight: "", purity: "", pricePerGram: "", quantity: "1" })
     setShowForm(false)
+  }
+
+  const generateQRCodeForItem = async (item: InventoryItem): Promise<string> => {
+    // Generate QR code if not already generated
+    const qrData = item.qrCode || generateQRCodeData(item)
+    const qrCodeImage = await generateQRCodeImage(qrData)
+    
+    // Update item with QR code if it wasn't there
+    if (!item.qrCode) {
+      const updatedInventory = inventory.map((invItem) =>
+        invItem.id === item.id ? { ...invItem, qrCode: qrData } : invItem
+      )
+      saveInventory(updatedInventory)
+      setInventory(updatedInventory)
+    }
+    
+    return qrCodeImage
+  }
+
+  const handleViewQRCode = async (item: InventoryItem) => {
+    try {
+      const qrCodeImage = await generateQRCodeForItem(item)
+      setViewingQRCode({ item, image: qrCodeImage })
+    } catch (error) {
+      console.error('Error generating QR code:', error)
+      alert('Failed to generate QR code. Please try again.')
+    }
+  }
+
+  const handlePrintQRCode = async (item: InventoryItem) => {
+    try {
+      const qrCodeImage = await generateQRCodeForItem(item)
+      const qrData = item.qrCode || generateQRCodeData(item)
+      
+      // Print QR code label
+      const itemToPrint = { ...item, qrCode: qrData }
+      printQRCodeLabel(itemToPrint, qrCodeImage)
+    } catch (error) {
+      console.error('Error printing QR code:', error)
+      alert('Failed to generate QR code. Please try again.')
+    }
   }
 
   const handleEdit = (item: InventoryItem) => {
@@ -148,10 +208,32 @@ export function Inventory() {
           <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Inventory</h2>
           <p className="text-sm sm:text-base text-muted-foreground">Manage your gold items</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 w-full sm:w-auto">
-          <Plus className="w-4 h-4" />
-          Add Item
-        </Button>
+        <div className="flex gap-2">
+          {onNavigate && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => onNavigate("qr-scanner")}
+                className="flex items-center gap-2 w-full sm:w-auto"
+              >
+                <QrCode className="w-4 h-4" />
+                <span className="hidden sm:inline">Scan QR</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => onNavigate("physical-inventory")}
+                className="flex items-center gap-2 w-full sm:w-auto"
+              >
+                <ClipboardCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">Physical Count</span>
+              </Button>
+            </>
+          )}
+          <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 w-full sm:w-auto">
+            <Plus className="w-4 h-4" />
+            Add Item
+          </Button>
+        </div>
       </div>
 
       <Card className="p-4 sm:p-6">
@@ -365,7 +447,47 @@ export function Inventory() {
                         <p className="font-semibold text-foreground">{item.name}</p>
                         <p className="text-sm text-muted-foreground">{item.type}</p>
                       </div>
-                      <p className="font-semibold text-primary">{formatCurrency(item.totalValue)}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-primary">{formatCurrency(item.totalValue)}</p>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewQRCode(item)}
+                            className="h-8 w-8 p-0"
+                            title="View QR Code"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePrintQRCode(item)}
+                            className="h-8 w-8 p-0"
+                            title="Print QR Code Label"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(item)}
+                            className="h-8 w-8 p-0"
+                            title="Edit Item"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeleteItem(item)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            title="Delete Item"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                       <div>
@@ -387,6 +509,12 @@ export function Inventory() {
                         <p className="font-medium text-foreground">{item.quantity}</p>
                       </div>
                     </div>
+                    {item.qrCode && (
+                      <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                        <QrCode className="w-3 h-3" />
+                        <span>QR Code Available</span>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {filteredInventory.length > itemsPerPage && (
@@ -403,6 +531,67 @@ export function Inventory() {
           })()}
         </div>
       </Card>
+
+      {/* QR Code View Dialog */}
+      <Dialog open={!!viewingQRCode.item} onOpenChange={() => setViewingQRCode({ item: null, image: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>QR Code - {viewingQRCode.item?.name}</DialogTitle>
+            <DialogDescription>
+              Scan this QR code to count this item in physical inventory
+            </DialogDescription>
+          </DialogHeader>
+          {viewingQRCode.image && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="p-4 bg-white rounded-lg border-2 border-gray-200">
+                <img 
+                  src={viewingQRCode.image} 
+                  alt="QR Code" 
+                  className="w-64 h-64"
+                />
+              </div>
+              <div className="text-center text-sm text-muted-foreground">
+                <p className="font-medium text-foreground mb-1">{viewingQRCode.item?.name}</p>
+                <p className="text-xs">
+                  {viewingQRCode.item?.type} | {viewingQRCode.item?.metalType === 'gold' ? 'Gold' : 'Silver'} {viewingQRCode.item?.purity}
+                </p>
+                <p className="text-xs">
+                  Weight: {viewingQRCode.item?.weight}g | Qty: {viewingQRCode.item?.quantity}
+                </p>
+              </div>
+              <div className="flex gap-2 w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (viewingQRCode.item) {
+                      handlePrintQRCode(viewingQRCode.item)
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print Label
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (viewingQRCode.image) {
+                      const link = document.createElement('a')
+                      link.download = `qr-code-${viewingQRCode.item?.name || 'item'}.png`
+                      link.href = viewingQRCode.image
+                      link.click()
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  <QrCode className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>

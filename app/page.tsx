@@ -12,9 +12,12 @@ import { Purchases } from "@/components/purchases"
 import { ImportExport } from "@/components/import-export"
 import { Setup } from "@/components/setup"
 import { Login } from "@/components/login"
+import { QRScanner } from "@/components/qr-scanner"
+import { PhysicalInventory } from "@/components/physical-inventory"
 import { isSetupComplete, isAuthenticated, clearAuthSession, getShopInfo } from "@/lib/auth"
+import { QrCode, ClipboardCheck } from "lucide-react"
 
-type Tab = "dashboard" | "customers" | "inventory" | "sales" | "gold-rates" | "purchases" | "import-export"
+type Tab = "dashboard" | "customers" | "inventory" | "sales" | "gold-rates" | "purchases" | "import-export" | "qr-scanner" | "physical-inventory"
 type AppState = "setup" | "login" | "app"
 
 export default function Home() {
@@ -175,6 +178,24 @@ export default function Home() {
               <Database className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Import/Export</span>
             </Button>
+            <Button
+              variant={activeTab === "qr-scanner" ? "default" : "ghost"}
+              onClick={() => setActiveTab("qr-scanner")}
+              className="flex items-center gap-1 sm:gap-2 whitespace-nowrap shrink-0 text-xs sm:text-sm"
+              size="sm"
+            >
+              <QrCode className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">QR Scanner</span>
+            </Button>
+            <Button
+              variant={activeTab === "physical-inventory" ? "default" : "ghost"}
+              onClick={() => setActiveTab("physical-inventory")}
+              className="flex items-center gap-1 sm:gap-2 whitespace-nowrap shrink-0 text-xs sm:text-sm"
+              size="sm"
+            >
+              <ClipboardCheck className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Physical Count</span>
+            </Button>
           </div>
         </div>
       </nav>
@@ -182,11 +203,13 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 pb-20 md:pb-6 lg:pb-8">
         {activeTab === "dashboard" && <Dashboard onNavigate={setActiveTab} />}
         {activeTab === "customers" && <Customers />}
-        {activeTab === "inventory" && <Inventory />}
+        {activeTab === "inventory" && <Inventory onNavigate={setActiveTab} />}
         {activeTab === "sales" && <Sales />}
         {activeTab === "gold-rates" && <GoldRates />}
         {activeTab === "purchases" && <Purchases />}
         {activeTab === "import-export" && <ImportExport />}
+        {activeTab === "qr-scanner" && <QRScanner />}
+        {activeTab === "physical-inventory" && <PhysicalInventory />}
       </main>
 
       {/* Bottom Navigation - Shown on mobile, hidden on tablet/desktop */}
