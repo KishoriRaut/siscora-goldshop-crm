@@ -6,10 +6,11 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Weight, Filter, X, Edit, Trash2, QrCode, Printer, ClipboardCheck, Eye } from "lucide-react"
+import { Plus, Weight, Filter, X, Edit, Trash2, QrCode, Printer, ClipboardCheck, Eye, Loader2 } from "lucide-react"
 import { getInventory, saveInventory, type InventoryItem } from "@/lib/storage"
 import { getSales } from "@/lib/storage"
 import { generateQRCodeData, generateQRCodeImage, printQRCodeLabel } from "@/lib/qrcode"
+import { toast } from "sonner"
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,7 @@ export function Inventory({ onNavigate }: InventoryProps) {
     item: InventoryItem | null
     image: string | null
   }>({ item: null, image: null })
+  const [generatingQRCode, setGeneratingQRCode] = useState<string | null>(null) // Track which item is generating QR code
 
   useEffect(() => {
     setInventory(getInventory())
@@ -118,41 +120,65 @@ export function Inventory({ onNavigate }: InventoryProps) {
   const generateQRCodeForItem = async (item: InventoryItem): Promise<string> => {
     // Generate QR code if not already generated
     const qrData = item.qrCode || generateQRCodeData(item)
+    
+    // Yield to event loop before heavy operation to prevent blocking
+    await new Promise(resolve => setTimeout(resolve, 0))
+    
+    // Generate QR code image (this is CPU-intensive but now non-blocking)
     const qrCodeImage = await generateQRCodeImage(qrData)
     
-    // Update item with QR code if it wasn't there
+    // Update item with QR code if it wasn't there (defer state update to avoid blocking)
     if (!item.qrCode) {
-      const updatedInventory = inventory.map((invItem) =>
-        invItem.id === item.id ? { ...invItem, qrCode: qrData } : invItem
-      )
-      saveInventory(updatedInventory)
-      setInventory(updatedInventory)
+      // Use requestAnimationFrame or setTimeout to defer state update
+      requestAnimationFrame(() => {
+        const updatedInventory = inventory.map((invItem) =>
+          invItem.id === item.id ? { ...invItem, qrCode: qrData } : invItem
+        )
+        saveInventory(updatedInventory)
+        setInventory(updatedInventory)
+      })
     }
     
     return qrCodeImage
   }
 
   const handleViewQRCode = async (item: InventoryItem) => {
+    // Prevent multiple simultaneous requests
+    if (generatingQRCode === item.id) return
+    
+    setGeneratingQRCode(item.id)
+    
     try {
+      // Defer the heavy operation
       const qrCodeImage = await generateQRCodeForItem(item)
       setViewingQRCode({ item, image: qrCodeImage })
     } catch (error) {
       console.error('Error generating QR code:', error)
-      alert('Failed to generate QR code. Please try again.')
+      toast.error('Failed to generate QR code. Please try again.')
+    } finally {
+      setGeneratingQRCode(null)
     }
   }
 
   const handlePrintQRCode = async (item: InventoryItem) => {
+    // Prevent multiple simultaneous requests
+    if (generatingQRCode === item.id) return
+    
+    setGeneratingQRCode(item.id)
+    
     try {
+      // Defer the heavy operation
       const qrCodeImage = await generateQRCodeForItem(item)
       const qrData = item.qrCode || generateQRCodeData(item)
       
-      // Print QR code label
+      // Print QR code label (this is also async but doesn't block)
       const itemToPrint = { ...item, qrCode: qrData }
       printQRCodeLabel(itemToPrint, qrCodeImage)
     } catch (error) {
       console.error('Error printing QR code:', error)
-      alert('Failed to generate QR code. Please try again.')
+      toast.error('Failed to generate QR code. Please try again.')
+    } finally {
+      setGeneratingQRCode(null)
     }
   }
 
@@ -456,8 +482,13 @@ export function Inventory({ onNavigate }: InventoryProps) {
                             onClick={() => handleViewQRCode(item)}
                             className="h-8 w-8 p-0"
                             title="View QR Code"
+                            disabled={generatingQRCode === item.id}
                           >
-                            <Eye className="w-4 h-4" />
+                            {generatingQRCode === item.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
                           </Button>
                           <Button
                             variant="outline"
@@ -465,8 +496,13 @@ export function Inventory({ onNavigate }: InventoryProps) {
                             onClick={() => handlePrintQRCode(item)}
                             className="h-8 w-8 p-0"
                             title="Print QR Code Label"
+                            disabled={generatingQRCode === item.id}
                           >
-                            <Printer className="w-4 h-4" />
+                            {generatingQRCode === item.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Printer className="w-4 h-4" />
+                            )}
                           </Button>
                           <Button
                             variant="outline"

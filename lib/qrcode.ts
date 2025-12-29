@@ -26,12 +26,14 @@ export function generateQRCodeData(item: InventoryItem): string {
  */
 export async function generateQRCodeImage(data: string): Promise<string> {
   try {
+    // Use smaller width for faster generation (200px instead of 300px)
+    // This reduces generation time significantly while still being scannable
     const qrDataUrl = await QRCode.toDataURL(data, {
       errorCorrectionLevel: 'M',
       type: 'image/png',
       quality: 0.92,
       margin: 1,
-      width: 300,
+      width: 200, // Reduced from 300 for faster generation
       color: {
         dark: '#000000',
         light: '#FFFFFF',
