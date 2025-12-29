@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Printer, X } from "lucide-react"
 import { type Sale, getCustomers, getInventory } from "@/lib/storage"
+import { getShopInfo } from "@/lib/auth"
 
 interface InvoiceProps {
   sale: Sale
@@ -13,6 +14,7 @@ interface InvoiceProps {
 export function Invoice({ sale, onClose }: InvoiceProps) {
   const customer = getCustomers().find((c) => c.id === sale.customerId)
   const item = getInventory().find((i) => i.id === sale.itemId)
+  const shopInfo = getShopInfo()
 
   const formatCurrency = (amount: number) => {
     return `NPR ${amount.toLocaleString("en-NP", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -51,10 +53,11 @@ export function Invoice({ sale, onClose }: InvoiceProps) {
         <div className="p-6 space-y-6 print:p-8" data-invoice-content>
           {/* Shop Header */}
           <div className="text-center border-b border-border pb-4">
-            <h1 className="text-2xl font-bold text-foreground">Gold Shop</h1>
-            <p className="text-muted-foreground">सुन पसल</p>
-            <p className="text-sm text-muted-foreground mt-2">Your Shop Address Here</p>
-            <p className="text-sm text-muted-foreground">Phone: +977-XXXXXXXXXX</p>
+            <h1 className="text-2xl font-bold text-foreground">{shopInfo?.shopName || "Gold Shop CRM"}</h1>
+            <p className="text-muted-foreground">सुन पसल व्यवस्थापन</p>
+            {shopInfo?.address && (
+              <p className="text-sm text-muted-foreground mt-2">{shopInfo.address}</p>
+            )}
           </div>
 
           {/* Bill Info */}
