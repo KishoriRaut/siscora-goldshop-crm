@@ -108,7 +108,8 @@ export default function Home() {
         </div>
       </header>
 
-      <nav className="bg-card border-b border-border">
+      {/* Top Navigation - Hidden on mobile, shown on tablet/desktop */}
+      <nav className="hidden md:block bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex gap-1 overflow-x-auto py-2 scrollbar-hide min-w-0">
             <Button
@@ -178,7 +179,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 pb-20 md:pb-6 lg:pb-8">
         {activeTab === "dashboard" && <Dashboard onNavigate={setActiveTab} />}
         {activeTab === "customers" && <Customers />}
         {activeTab === "inventory" && <Inventory />}
@@ -187,6 +188,89 @@ export default function Home() {
         {activeTab === "purchases" && <Purchases />}
         {activeTab === "import-export" && <ImportExport />}
       </main>
+
+      {/* Bottom Navigation - Shown on mobile, hidden on tablet/desktop */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 safe-area-inset-bottom">
+        <div className="flex items-center justify-around h-16 px-2">
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-lg transition-colors ${
+              activeTab === "dashboard"
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <Sparkles className={`w-5 h-5 ${activeTab === "dashboard" ? "text-primary" : ""}`} />
+            <span className="text-[10px] font-medium">Dashboard</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("customers")}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-lg transition-colors ${
+              activeTab === "customers"
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <Users className={`w-5 h-5 ${activeTab === "customers" ? "text-primary" : ""}`} />
+            <span className="text-[10px] font-medium">Customers</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("inventory")}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-lg transition-colors ${
+              activeTab === "inventory"
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <Package className={`w-5 h-5 ${activeTab === "inventory" ? "text-primary" : ""}`} />
+            <span className="text-[10px] font-medium">Inventory</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("sales")}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-lg transition-colors ${
+              activeTab === "sales"
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <Receipt className={`w-5 h-5 ${activeTab === "sales" ? "text-primary" : ""}`} />
+            <span className="text-[10px] font-medium">Sales</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("gold-rates")}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-lg transition-colors ${
+              activeTab === "gold-rates"
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <TrendingUp className={`w-5 h-5 ${activeTab === "gold-rates" ? "text-primary" : ""}`} />
+            <span className="text-[10px] font-medium">Rates</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("purchases")}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-lg transition-colors ${
+              activeTab === "purchases"
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <ShoppingCart className={`w-5 h-5 ${activeTab === "purchases" ? "text-primary" : ""}`} />
+            <span className="text-[10px] font-medium">Buy</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("import-export")}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full rounded-lg transition-colors ${
+              activeTab === "import-export"
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <Database className={`w-5 h-5 ${activeTab === "import-export" ? "text-primary" : ""}`} />
+            <span className="text-[10px] font-medium">Data</span>
+          </button>
+        </div>
+      </nav>
     </div>
   )
 }
