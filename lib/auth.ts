@@ -6,6 +6,8 @@ export interface ShopInfo {
   passwordHash: string
   setupCompleted: boolean
   setupDate: string
+  securityQuestion?: string
+  securityAnswer?: string
 }
 
 const SHOP_INFO_KEY = "goldshop_setup_info"
@@ -76,6 +78,44 @@ export function isAuthenticated(): boolean {
 export function clearAuthSession() {
   if (typeof window === "undefined") return
   sessionStorage.removeItem(AUTH_SESSION_KEY)
+}
+
+// Reset password - requires shop name and address verification
+export async function resetPassword(
+  shopName: string,
+  address: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  if (typeof window === "undefined") {
+    return { success: false, error: "Not available on server" }
+  }
+
+  const shopInfo = getShopInfo()
+  
+  if (!shopInfo) {
+    return { success: false, error: "Shop information not found" }
+  }
+
+  // Verify shop name and address (case-insensitive)
+  const nameMatch = shopInfo.shopName.toLowerCase().trim() === shopName.toLowerCase().trim()
+  const addressMatch = shopInfo.address.toLowerCase().trim() === address.toLowerCase().trim()
+
+  if (!nameMatch || !addressMatch) {
+    return { success: false, error: "Shop name or address does not match" }
+  }
+
+  // Hash new password
+  const newPasswordHash = await hashPassword(newPassword)
+
+  // Update shop info with new password
+  const updatedShopInfo: ShopInfo = {
+    ...shopInfo,
+    passwordHash: newPasswordHash,
+  }
+
+  saveShopInfo(updatedShopInfo)
+
+  return { success: true }
 }
 
 
