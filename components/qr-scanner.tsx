@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Html5Qrcode } from "html5-qrcode"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QrCode, Camera, CheckCircle, XCircle, AlertCircle } from "lucide-react"
@@ -24,54 +23,68 @@ export function QRScanner() {
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [isRequestingPermission, setIsRequestingPermission] = useState(false)
   const [permissionStatus, setPermissionStatus] = useState<"prompt" | "granted" | "denied" | "unknown">("unknown")
-  const html5QrCodeRef = useRef<Html5Qrcode | null>(null)
+  const html5QrCodeRef = useRef<any | null>(null) // Using any since Html5Qrcode is dynamically imported
   const scannerId = "qr-reader"
 
   const checkPermissionStatus = async () => {
     if (typeof window === "undefined") return
 
-    // Check if Permissions API is available
-    if ("permissions" in navigator) {
-      try {
-        const result = await navigator.permissions.query({ name: "camera" as PermissionName })
-        setPermissionStatus(result.state as "granted" | "denied" | "prompt")
-        
-        // Listen for permission changes
-        result.onchange = () => {
+    try {
+      // Check if Permissions API is available
+      if ("permissions" in navigator && navigator.permissions) {
+        try {
+          const result = await navigator.permissions.query({ name: "camera" as PermissionName })
           setPermissionStatus(result.state as "granted" | "denied" | "prompt")
-          if (result.state === "granted") {
-            setCameraError(null)
+          
+          // Listen for permission changes
+          result.onchange = () => {
+            setPermissionStatus(result.state as "granted" | "denied" | "prompt")
+            if (result.state === "granted") {
+              setCameraError(null)
+            }
           }
+        } catch (error) {
+          // Permissions API might not support 'camera' query in all browsers
+          setPermissionStatus("unknown")
         }
-      } catch (error) {
-        // Permissions API might not support 'camera' query in all browsers
+      } else {
         setPermissionStatus("unknown")
       }
-    } else {
-      setPermissionStatus("unknown")
-    }
 
-    // Check if camera is available
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
-        setCameraError(
-          "Camera access requires HTTPS. Please access this app via HTTPS or localhost for camera functionality."
-        )
-        setPermissionStatus("denied")
-      } else {
-        setCameraError("Camera access is not supported in this browser.")
-        setPermissionStatus("denied")
+      // Check if camera is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+          setCameraError(
+            "Camera access requires HTTPS. Please access this app via HTTPS or localhost for camera functionality."
+          )
+          setPermissionStatus("denied")
+        } else {
+          setCameraError("Camera access is not supported in this browser.")
+          setPermissionStatus("denied")
+        }
       }
+    } catch (error) {
+      console.error("Error in checkPermissionStatus:", error)
+      setPermissionStatus("unknown")
     }
   }
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === "undefined") return
+
     // Load existing counts
-    const counts = getCurrentPhysicalInventoryCounts()
-    setScannedItems(counts)
+    try {
+      const counts = getCurrentPhysicalInventoryCounts()
+      setScannedItems(counts)
+    } catch (error) {
+      console.error("Error loading counts:", error)
+    }
 
     // Check permission status
-    checkPermissionStatus()
+    checkPermissionStatus().catch((error) => {
+      console.error("Error checking permission status:", error)
+    })
 
     return () => {
       // Cleanup on unmount
@@ -187,6 +200,8 @@ export function QRScanner() {
   }
 
   const startScanning = async () => {
+    if (typeof window === "undefined") return
+    
     try {
       setCameraError(null)
       setIsRequestingPermission(true)
@@ -204,15 +219,20 @@ export function QRScanner() {
       console.error("Error in startScanning:", error)
       setIsRequestingPermission(false)
       setCameraError("Failed to start scanner. " + (error.message || "Please try again."))
-      toast.error("Failed to start scanner. See instructions below.")
+      if (typeof window !== "undefined" && toast) {
+        toast.error("Failed to start scanner. See instructions below.")
+      }
     }
   }
 
   const startScannerAfterPermission = async () => {
-    const html5QrCode = new Html5Qrcode(scannerId)
-    html5QrCodeRef.current = html5QrCode
-
+    if (typeof window === "undefined") return
+    
     try {
+      // Dynamic import to avoid SSR issues
+      const { Html5Qrcode } = await import("html5-qrcode")
+      const html5QrCode = new Html5Qrcode(scannerId)
+      html5QrCodeRef.current = html5QrCode
 
       // Try with back camera first
       try {
@@ -257,7 +277,9 @@ export function QRScanner() {
       setIsRequestingPermission(false)
       setCameraError(null)
       setPermissionStatus("granted")
-      toast.success("QR Scanner started. Point camera at QR code.")
+      if (typeof window !== "undefined" && toast) {
+        toast.success("QR Scanner started. Point camera at QR code.")
+      }
     } catch (error: any) {
       console.error("Error starting scanner:", error)
       setIsRequestingPermission(false)
@@ -273,7 +295,9 @@ export function QRScanner() {
       }
       
       setCameraError(errorMessage)
-      toast.error("Failed to start camera. See instructions below.")
+      if (typeof window !== "undefined" && toast) {
+        toast.error("Failed to start camera. See instructions below.")
+      }
       throw error // Re-throw so startScanning can handle it
     }
   }
